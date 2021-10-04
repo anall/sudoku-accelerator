@@ -1,0 +1,37 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Mon Oct  4 03:19:15 2021
+[*]
+[dumpfile] "/mnt/SpinningRust/zero-to-asic/sudoku-accelerator/sudoku_cell.vcd"
+[dumpfile_mtime] "Mon Oct  4 03:18:49 2021"
+[dumpfile_size] 1731
+[savefile] "/mnt/SpinningRust/zero-to-asic/sudoku-accelerator/sudoku_cell.gtkw"
+[timestart] 202100
+[size] 1495 755
+[pos] 345 101
+*-14.000000 280000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 205
+[signals_width] 174
+[sst_expanded] 1
+[sst_vpaned_height] 213
+@28
+sudoku_cell.clk
+sudoku_cell.reset
+sudoku_cell.oe
+sudoku_cell.we
+@100000028
+sudoku_cell.address[1:0]
+@28
+sudoku_cell.is_singleton
+@29
+sudoku_cell.latch_valid
+@28
+sudoku_cell.latch_singleton
+sudoku_cell.value_io[9:1]
+sudoku_cell.value[9:1]
+sudoku_cell.pencil_out[9:1]
+sudoku_cell.valid[9:1]
+@20000024
+sudoku_cell.valid[9:1]
+[pattern_trace] 1
+[pattern_trace] 0
