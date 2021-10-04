@@ -51,19 +51,19 @@ always @(posedge clk) begin
     if ( we ) begin
       if ( address == 0 ) begin
         value <= value_io;
-        valid <= (value_io==0) ? ~pencil_out : 0;
+        valid <= (value_io == 0) ? ~pencil_out : 0;
       end else if ( address == 1 ) begin
         pencil_out <= value_io;
-        valid <= (value==0) ? ~value_io : 0;
+        valid <= (value == 0) ? ~value_io : 0;
       end
-    end else if ( latch_valid && value == 0 )
-      valid <= valid & value_io;
+    end else if ( latch_valid )
+      valid <= (value == 0) ? valid & value_io : 0;
     else if ( latch_singleton ) begin
-      if ( is_singleton ) begin
+      if ( is_singleton && value == 0 ) begin
         value <= valid;
         valid <= 0;
       end else
-        valid <= ~pencil_out;
+        valid <= (value == 0) ? ~pencil_out : 0;
     end
   end
 end 

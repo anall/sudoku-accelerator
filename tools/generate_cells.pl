@@ -30,16 +30,9 @@ for (my $row = 0; $row < 9; ++$row) {
       push @{ $rowids[$row] }, $idx;
       push @{ $colids[$col] }, $idx;
       push @{ $boxids[$box] }, $idx;
-      print "sudoku_cell cell$row$col( .clk(clk), .reset(reset), .value_io(data[" . (9*($col+1)-1) .":" . 9*$col . "]),\n".
-        "  .address(cell_addr), .we(row_e[$row] & we_nb[$col3]), .oe(row_e[$row] & oe),\n".
-        "  .latch_valid(latch_valid), .latch_singleton(latch_singleton), .value(values[$idx]),\n".
-        "  .valid_row(valid_row[$row]), .valid_col(valid_col[$col]), .valid_box(valid_box[$box]),\n".
+      print "sudoku_cell cell$row$col( .clk(clk), .reset(reset), .value_io(data_i[" . (9*($col+1)-1) .":" . 9*$col . "]),\n".
+        "  .address(cell_addr), .we(row_en_c[$row] & we_c[$col3]), .oe(row_en_c[$row] & oe_c),\n".
+        "  .latch_valid(row_en_c[$row] & latch_valid), .latch_singleton(latch_singleton),\n".
         "  .is_singleton(cell_singleton[$idx]), .solved(cell_solved[$idx]) );\n";
   }
-}
-
-for (my $i = 0; $i < 9; ++$i) {
-  print "assign valid_row[$i] = " . join(' & ', map { "~values[$_]" } @{$rowids[$i]}) . ";\n";
-  print "assign valid_col[$i] = " . join(' & ', map { "~values[$_]" } @{$colids[$i]}) . ";\n";
-  print "assign valid_box[$i] = " . join(' & ', map { "~values[$_]" } @{$boxids[$i]}) . ";\n";
 }

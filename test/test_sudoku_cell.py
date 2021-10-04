@@ -42,7 +42,8 @@ async def test_sudoku_cell(dut):
     dut.we <= 0
 
     await ClockCycles(dut.clk, 1)
-    assert (dut.pencil_out == 0b00000101)
+    assert (dut.pencil_out == 0b000000101)
+    assert (dut.valid ==      0b111111010)
 
     dut.latch_singleton <= 1
     await ClockCycles(dut.clk, 1)

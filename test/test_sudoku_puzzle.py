@@ -37,10 +37,9 @@ async def read_puzzle(dut):
   for row in range(9):
     dut.address <= row
     await ClockCycles(dut.clk, 1)
-    
 
     val = dut.data.value.integer
-    
+
     for col in range(9):
       dval = val & 0b111111111
       cur_number = next(filter(lambda v: val & 1<<v,range(9)),-1)+1
@@ -66,9 +65,10 @@ async def test_sudoku_puzzle(dut):
   dut.oe <= 0
   dut.we <= 0
   dut.start_solve <= 0
+  dut.abort <= 0
   await reset(dut)
-    
-  #         111222333444555666777888999111222333444555666777888999111222333444555666777888999  
+
+  #           111222333444555666777888999111222333444555666777888999111222333444555666777888999
   o_puzzle = "5 1 6  24 6 4   73 7    1 5     72 88 239 5473  284 9   56  4   2    31 946  17  "
   s_puzzle = "581763924269415873473928165694157238812396547357284691135672489728549316946831752"
   await load_puzzle(dut,o_puzzle)
@@ -78,13 +78,27 @@ async def test_sudoku_puzzle(dut):
   dut.start_solve <= 1
   await ClockCycles(dut.clk, 1)
   dut.start_solve <= 0
-  
-  while ( dut.solved == 0 ):
-    await ClockCycles(dut.clk, 1)
-    assert(dut.busy == 1)
 
+  n = 0
   await ClockCycles(dut.clk, 1)
-  assert(dut.busy == 0)
-  assert(dut.solved == 1)
+  while ( dut.busy == 1 and n < 1000 ):
+    n = n + 1;
+    await ClockCycles(dut.clk, 1)
 
-  assert( s_puzzle == await read_puzzle(dut) )
+  if ( dut.busy == 1 ):
+    dut.abort <= 1
+    await ClockCycles(dut.clk, 10)
+    dut.abort <= 0
+
+  assert( dut.busy == 0 )
+
+  f_puzzle = await read_puzzle(dut)
+  print(f_puzzle)
+
+  assert( n < 1000 )
+
+  if ( dut.stuck ):
+    print("dut ended stuck!")
+  
+  assert( dut.solved == 1 and dut.stuck == 0 )
+  assert( s_puzzle == f_puzzle )

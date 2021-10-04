@@ -1,35 +1,31 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Mon Oct  4 01:52:56 2021
+[*] Mon Oct  4 05:49:22 2021
 [*]
 [dumpfile] "/mnt/SpinningRust/zero-to-asic/sudoku-accelerator/sudoku_puzzle.vcd"
-[dumpfile_mtime] "Mon Oct  4 01:43:12 2021"
-[dumpfile_size] 102132
+[dumpfile_mtime] "Mon Oct  4 05:31:20 2021"
+[dumpfile_size] 254134
 [savefile] "/mnt/SpinningRust/zero-to-asic/sudoku-accelerator/sudoku_puzzle.gtkw"
-[timestart] 207890
+[timestart] 0
 [size] 1466 820
-[pos] 126 43
-*-14.000000 240000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] 348 0
+*-19.000000 480000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] sudoku_puzzle.
 [sst_width] 205
-[signals_width] 190
+[signals_width] 382
 [sst_expanded] 1
 [sst_vpaned_height] 236
 @28
 sudoku_puzzle.clk
 sudoku_puzzle.reset
-sudoku_puzzle.state[2:0]
 sudoku_puzzle.start_solve
-@29
 sudoku_puzzle.busy
-@28
 sudoku_puzzle.solved
 sudoku_puzzle.stuck
 @22
 sudoku_puzzle.address[5:0]
 @28
 sudoku_puzzle.cell_addr[1:0]
-sudoku_puzzle.row_e[8:0]
 @c00028
 sudoku_puzzle.we[2:0]
 @28
@@ -42,14 +38,22 @@ sudoku_puzzle.we[2:0]
 sudoku_puzzle.oe
 @22
 sudoku_puzzle.data[80:0]
+sudoku_puzzle.data_i[80:0]
 @28
-sudoku_puzzle.solved
-sudoku_puzzle.stuck
-sudoku_puzzle.busy
+sudoku_puzzle.row_en_decode[8:0]
+sudoku_puzzle.row_en_i[8:0]
 @22
 sudoku_puzzle.cell_solved[80:0]
 sudoku_puzzle.cell_singleton[80:0]
 @28
 sudoku_puzzle.we[2:0]
+@29
+sudoku_puzzle.latch_singleton
+@28
+sudoku_puzzle.latch_valid
+@22
+sudoku_puzzle.state[3:0]
+@28
+sudoku_puzzle.valid_row[9:1]
 [pattern_trace] 1
 [pattern_trace] 0
