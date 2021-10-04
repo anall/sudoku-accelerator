@@ -49,11 +49,12 @@ always @(posedge clk) begin
     valid <= ~pencil_out;
   end else begin
     if ( we ) begin
-      if ( address == 0 )
+      if ( address == 0 ) begin
         value <= value_io;
-      else if ( address == 1 ) begin
+        valid <= (value_io==0) ? ~pencil_out : 0;
+      end else if ( address == 1 ) begin
         pencil_out <= value_io;
-        valid <= ~value_io;
+        valid <= (value==0) ? ~value_io : 0;
       end
     end else if ( latch_valid && value == 0 )
       valid <= valid & value_io;
