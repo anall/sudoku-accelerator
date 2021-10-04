@@ -20,27 +20,16 @@ module sudoku_cell (
 
 reg [9:1] value;
 reg [9:1] pencil_out;
-reg [9:1] requested_out;
+reg [9:1] requested_out = 'z;
 reg [9:1] valid;
 
 assign is_singleton = (valid[9]+valid[8]+valid[7]+valid[6]+valid[5]+valid[4]+valid[3]+valid[2]+valid[1]) == 1;
 assign solved = value != 0;
 
-assign value_io = requested_out;
-
-// Does this need to be registered?
-always @(oe,address) begin
-  if (oe)
-    case (address)
-      0: requested_out = value;
-      1: requested_out = pencil_out;
-      2: requested_out = valid;
-    endcase
-  else
-    requested_out = 'z;
-end
-
-reg [9:0] p_valid;
+assign value_io = ( ~oe ? 'z : (
+  address == 0 ? value :
+  address == 1 ? pencil_out :
+  address == 2 ? valid : 'z ) );
 
 always @(posedge clk) begin
   if ( reset ) begin

@@ -73,6 +73,7 @@ async def test_sudoku_puzzle(dut):
   s_puzzle = "581763924269415873473928165694157238812396547357284691135672489728549316946831752"
   await load_puzzle(dut,o_puzzle)
 
+  print(o_puzzle)
   assert( o_puzzle == await read_puzzle(dut) )
 
   dut.start_solve <= 1
@@ -90,15 +91,18 @@ async def test_sudoku_puzzle(dut):
     await ClockCycles(dut.clk, 10)
     dut.abort <= 0
 
-  assert( dut.busy == 0 )
+  if ( dut.busy == 1 ):
+    print("solver locked up -- FAILED TO ABORT SOLVER! Cannot read out puzzle state")
+    assert( dut.busy == 0 )
+  else:
+    f_puzzle = await read_puzzle(dut)
 
-  f_puzzle = await read_puzzle(dut)
-  print(f_puzzle)
+    if ( n >= 1000 ):
+      print("solver possibly locked up (hit max iteration limit), puzzle progress below")
+    if ( dut.stuck == 1 ):
+      print("solver exited stuck (failed to progress puzzle), puzzle progress below")
 
-  assert( n < 1000 )
-
-  if ( dut.stuck ):
-    print("dut ended stuck!")
+    print(f_puzzle)
   
-  assert( dut.solved == 1 and dut.stuck == 0 )
-  assert( s_puzzle == f_puzzle )
+    assert( n < 1000 and dut.solved == 1 and dut.stuck == 0 )
+    assert( s_puzzle == f_puzzle )

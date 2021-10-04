@@ -19,3 +19,6 @@ show_synth_%: src/%.v
 
 show_%: %.vcd %.gtkw
 	gtkwave $^ 
+
+clean:
+	rm -rf *.vcd sim_build test/__pycache__

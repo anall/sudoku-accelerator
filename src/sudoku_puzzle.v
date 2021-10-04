@@ -69,18 +69,17 @@ end
 assign data = ( ~ busy && oe_c ) ? data_i : 'z;
 
 // internal versions of we, oe, and row_en
-reg we_i; // which will enable all sectors at once
 reg oe_i;
 reg [8:0] row_en_i;
 
-wire [80:0] data_i = ( ~busy && ~oe_c ) ? data : ( oe_c ? 'z : ( (we_i|latch_valid) ? (
+wire [80:0] data_i = ( ~busy && ~oe_c ) ? data : ( (~oe_c&latch_valid) ? (
   state == STATE_SAVE_ROW ? {valid_row,valid_row,valid_row,valid_row,valid_row,valid_row,valid_row,valid_row,valid_row} :
   state == STATE_SAVE_BOX ? {valid_box[2],valid_box[2],valid_box[2],valid_box[1],valid_box[1],valid_box[1],valid_box[0],valid_box[0],valid_box[0]} :
   state == STATE_SAVE_COL ? {valid_col[8],valid_col[7],valid_col[6],valid_col[5],valid_col[4],valid_col[3],valid_col[2],valid_col[1],valid_col[0]} : 'z
-) : 'z ) ); //(we_i ? data_i_reg : 'z) : ( we != 0 ? data : 'z ); // internal data bus
+) : 'z ); //(we_i ? data_i_reg : 'z) : ( we != 0 ? data : 'z ); // internal data bus
 
-// we, oe and row_en for cells (which will either be exposed or internal)
-wire [2:0] we_c = busy ? {we_i,we_i,we_i} : we;
+// we, oe and row_en for cells (which will either be external or internal depending on busy state)
+wire [2:0] we_c = busy ? '0 : we;
 wire oe_c = busy ? oe_i : oe;
 wire [8:0] row_en_c = busy ? row_en_i : row_en_decode;
 
@@ -98,14 +97,12 @@ always @(posedge clk) begin
     latch_singleton <= 0;
     latch_valid <= 0;
 
-    we_i <= 0;
     oe_i <= 0;
     row_en_i <= 0;
   end else if ( busy ) begin // busy means 'not STATE_IDLE'
     if ( solved || abort ) begin // abort if we ever hit solved or abort (stuck will exit when encountered)
       latch_singleton <= 0;
       latch_valid <= 0;
-      we_i <= 0;
       oe_i <= 0;
       row_en_i <= 0;
       stuck <= 0;
@@ -114,7 +111,6 @@ always @(posedge clk) begin
       if ( is_singleton || stuck ) begin // reuse "stuck" for first iteration
         stuck <= 0;
         row_en_i <= 1;
-        we_i <= 0;
         oe_i <= 1;
         latch_singleton <= 0;
 
@@ -136,7 +132,6 @@ always @(posedge clk) begin
       end else begin
         latch_singleton <= 0;
         latch_valid <= 0;
-        we_i <= 0;
         oe_i <= 0;
         row_en_i <= 0;
         stuck <= 1;
@@ -206,7 +201,6 @@ always @(posedge clk) begin
     latch_singleton <= ~solved;
     latch_valid <= 0;
     oe_i <= 0;
-    we_i <= 0;
     stuck <= 1;
     state <= solved ? STATE_IDLE : STATE_LSINGLE;
   end
