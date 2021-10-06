@@ -23,7 +23,6 @@ async def test_sudoku_cell(dut):
     dut.we <= 0
     dut.oe <= 0
 
-    dut.latch_valid <= 0
     dut.latch_singleton <= 0
     await reset(dut)
 
@@ -34,17 +33,6 @@ async def test_sudoku_cell(dut):
 
     assert (dut.value == 0b00000000)
 
-    dut.value_io <= 0b000000101
-    dut.we <= 1
-    dut.address <= 1
-    await ClockCycles(dut.clk, 1)
-    dut.value_io <= z9
-    dut.we <= 0
-
-    await ClockCycles(dut.clk, 1)
-    assert (dut.pencil_out == 0b000000101)
-    assert (dut.valid ==      0b111111010)
-
     dut.latch_singleton <= 1
     await ClockCycles(dut.clk, 1)
     dut.latch_singleton <= 0
@@ -52,30 +40,25 @@ async def test_sudoku_cell(dut):
     await ClockCycles(dut.clk, 1)
     assert (dut.value == 0b000000000)
 
-    dut.oe <= 1
-    await ClockCycles(dut.clk, 1)
-    assert (dut.value_io.value == dut.pencil_out.value)
-    dut.oe <= 0
-    await ClockCycles(dut.clk, 1)
-
-    dut.latch_valid <= 1
-    dut.value_io <= 0b100011101
+    dut.we <= 1
+    dut.address <= 1
+    dut.value_io <= 0b100011100
     await ClockCycles(dut.clk, 1)
 
     dut.value_io <= 0b100101101
     await ClockCycles(dut.clk, 1)
 
-    dut.value_io <= 0b100010101
+    dut.value_io <= 0b100010001
     await ClockCycles(dut.clk, 1)
 
     dut.value_io <= z9
-    dut.latch_valid <= 0
+    dut.we <= 0;
 
     await ClockCycles(dut.clk, 1)
     assert (dut.valid == 0b100000000)
 
     dut.oe <= 1
-    dut.address <= 2
+    dut.address <= 1
     await ClockCycles(dut.clk, 1)
     assert (dut.value_io.value == dut.valid.value)
     assert (dut.is_singleton)
@@ -101,11 +84,11 @@ async def test_sudoku_cell(dut):
     dut.we <= 0
     dut.oe <= 0
 
-    dut.latch_valid <= 0
     dut.latch_singleton <= 0
     await reset(dut)
 
-    dut.latch_valid <= 1
+    dut.we <= 1
+    dut.address <= 1
     dut.value_io <= 0b100011101
     await ClockCycles(dut.clk, 1)
 
@@ -115,7 +98,7 @@ async def test_sudoku_cell(dut):
     dut.value_io <= 0b100010100
     await ClockCycles(dut.clk, 1)
 
-    dut.latch_valid <= 0
+    dut.we <= 0
     dut.latch_singleton <= 1
     await ClockCycles(dut.clk, 1)
     dut.latch_singleton <= 0

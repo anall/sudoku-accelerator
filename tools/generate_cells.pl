@@ -30,9 +30,8 @@ for (my $row = 0; $row < 9; ++$row) {
       push @{ $rowids[$row] }, $idx;
       push @{ $colids[$col] }, $idx;
       push @{ $boxids[$box] }, $idx;
-      print "sudoku_cell cell$row$col( .clk(clk), .reset(reset), .value_io(data_i[" . (9*($col+1)-1) .":" . 9*$col . "]),\n".
+      print "sudoku_cell cell$row$col( .clk(clk), .reset(reset), .value_io(data_c[" . (9*($col+1)-1) .":" . 9*$col . "]),\n".
         "  .address(cell_addr), .we(row_en_c[$row] & we_c[$col3]), .oe(row_en_c[$row] & oe_c),\n".
-        "  .latch_valid(row_en_c[$row] & latch_valid), .latch_singleton(latch_singleton),\n".
-        "  .is_singleton(cell_singleton[$idx]), .solved(cell_solved[$idx]) );\n";
+        "  .latch_singleton(latch_singleton), .is_singleton(cell_singleton[$idx]), .solved(cell_solved[$idx]) );\n";
   }
 }
