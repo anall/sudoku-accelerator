@@ -13,6 +13,7 @@ async def reset(dut):
 async def load_puzzle(dut,puzzle):
   assert(len(puzzle) == 81)
 
+  assert(dut.busy == 0)
   values = list(map(lambda x: 0 if x == ' ' else int(x),puzzle))
   dut.we <= 0b111
   for row in range(9):
@@ -22,23 +23,21 @@ async def load_puzzle(dut,puzzle):
       if ( values[idx] > 0 ):
         val = val | 1<<(values[idx]-1)<<(9*col)
     dut.address <= row
-    dut.data <= val
+    dut.wdata <= val
     await ClockCycles(dut.clk, 1)
 
   dut.we <= 0
-  dut.data <= BinaryValue("z")
   await ClockCycles(dut.clk, 1)
 
 async def read_puzzle(dut):
   puzzle = ''
 
-  dut.data <= BinaryValue("z")
-  dut.oe <= 1
+  assert(dut.busy == 0)
   for row in range(9):
     dut.address <= row
     await ClockCycles(dut.clk, 1)
 
-    val = dut.data.value.integer
+    val = dut.rdata.value.integer
 
     for col in range(9):
       dval = val & 0b111111111
@@ -49,7 +48,6 @@ async def read_puzzle(dut):
         puzzle = puzzle + str(cur_number)
       val = val >> 9
 
-  dut.oe <= 0
   await ClockCycles(dut.clk, 1)
 
   return puzzle
@@ -90,10 +88,12 @@ async def test_puzzle(dut,o_puzzle,s_puzzle,solvable):
       print("solver somehow solved unsolvable puzzle, puzzle below")
 
     print(f_puzzle)
-  
-    assert( n < 1000 and (
-      (solvable and dut.solved == 1 and dut.stuck == 0 ) or
-      (solvable and dut.solved == 0 and dut.stuck == 1 )))
+ 
+    assert( n < 1000 )
+    if ( solvable ):
+      assert( dut.solved == 1 and dut.stuck == 0 )
+    else:
+      assert( dut.solved == 0 and dut.stuck == 1 )
     assert( s_puzzle == f_puzzle )
 
 @cocotb.test()
@@ -102,9 +102,8 @@ async def test_sudoku_puzzle(dut):
   cocotb.fork(clock.start())
 
   z81 =  BinaryValue("z")
-  dut.data <= z81
+  dut.wdata <= 0
   dut.address <= 0
-  dut.oe <= 0
   dut.we <= 0
   dut.start_solve <= 0
   dut.abort <= 0
