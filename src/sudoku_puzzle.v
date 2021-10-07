@@ -23,7 +23,8 @@ module sudoku_puzzle (
 
   output wire busy,
   output wire solved,
-  output reg stuck
+  output reg stuck,
+  output reg illegal
 );
 
 wire [9:1] values [80:0];
@@ -73,7 +74,7 @@ wire [80:0] rdata_c =
   row_en_c[7] ? rdata_cell[7] :
   row_en_c[8] ? rdata_cell[8] : '0;
 
-assign rdata = busy ? '0 : rdata_c;
+assign rdata = busy ? ~0 : rdata_c;
 wire [80:0] wdata_c = busy ? wdata_i : wdata;
 
 // internal versions of oe, and row_en, and data ( we is latch_valid )
@@ -93,6 +94,7 @@ always @(posedge clk) begin
   if ( reset ) begin
     state <= STATE_IDLE;
     stuck <= 0;
+    illegal <= 0;
 
     latch_singleton <= 0;
     latch_valid <= 0;
@@ -100,11 +102,12 @@ always @(posedge clk) begin
     wdata_i <= 0;
     row_en_i <= 0;
   end else if ( busy ) begin // busy means 'not STATE_IDLE'
-    if ( solved || abort ) begin // abort if we ever hit solved or abort (stuck will exit when encountered)
+    if ( solved || is_illegal || abort ) begin // abort if we ever hit solved or abort (stuck will exit when encountered)
       latch_singleton <= 0;
       latch_valid <= 0;
       row_en_i <= 0;
-      stuck <= 0;
+      stuck <= (is_illegal ? 1 : 0);
+      illegal <= is_illegal;
       state <= STATE_IDLE;
     end else if ( state == STATE_LSINGLE ) begin
       if ( is_singleton || stuck ) begin // reuse "stuck" for first iteration
@@ -202,6 +205,7 @@ always @(posedge clk) begin
     latch_singleton <= 1;
     latch_valid <= 0;
     stuck <= 1;
+    illegal <= 0;
     state <= STATE_LSINGLE;
   end
 end

@@ -3,6 +3,7 @@ from cocotb.binary import BinaryValue
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, FallingEdge, ClockCycles
 import random
+from os import environ
 
 async def reset(dut):
   dut.reset <= 1
@@ -98,7 +99,12 @@ async def test_puzzle(dut,o_puzzle,s_puzzle,solvable):
 
 @cocotb.test()
 async def test_sudoku_puzzle(dut):
-  clock = Clock(dut.clk, 10, units="us")
+  clock = None
+  if environ.get("GATELEVEL"):
+    dut.VPWR <= 1
+    dut.VGND <= 0
+
+  clock = Clock(dut.clk, 10, units="ns")
   cocotb.fork(clock.start())
 
   z81 =  BinaryValue("z")
@@ -109,10 +115,15 @@ async def test_sudoku_puzzle(dut):
   dut.abort <= 0
   await reset(dut)
 
-  #           111222333444555666777888999111222333444555666777888999111222333444555666777888999
   await test_puzzle(dut,
     "5 1 6  24 6 4   73 7    1 5     72 88 239 5473  284 9   56  4   2    31 946  17  ",
     "581763924269415873473928165694157238812396547357284691135672489728549316946831752",1)
+
+  await test_puzzle(dut,
+    #aaabbbcccaaabbbcccaaabbbcccaaabbbcccaaabbbcccaaabbbcccaaabbbcccaaabbbcccaaabbbccc
+    "5 1 62 24 624   73 7    1 5     72 88 239 5473  284 9   56  4   2    31 946  17  ",
+    "5 1 62 24 624   7347  3 1 5     72 88123965473 728469   56  48 72    31 946  17 2",0)
+  assert( dut.illegal == 1 )
 
   await test_puzzle(dut,
     "4   2     35     778 39   45 4      6 2 8 7 3      5 91   48 353     28     3   6",

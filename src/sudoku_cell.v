@@ -42,8 +42,8 @@ always @(posedge clk) begin
       if ( is_singleton && value == 0 ) begin
         value <= valid;
         valid <= 0;
-      end else
-        valid <= (value == 0) ? ~0 : 0;
+      end/* else
+        valid <= (value == 0) ? ~0 : 0;*/
     end
   end
 end 
