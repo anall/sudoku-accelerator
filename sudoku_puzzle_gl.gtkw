@@ -1,0 +1,33 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Wed Oct  6 23:34:47 2021
+[*]
+[dumpfile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/sudoku_puzzle.vcd"
+[dumpfile_mtime] "Wed Oct  6 23:31:24 2021"
+[dumpfile_size] 23271404
+[savefile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/sudoku_puzzle_gl.gtkw"
+[timestart] 0
+[size] 1679 811
+[pos] 264 -261
+*-29.000000 606000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 205
+[signals_width] 308
+[sst_expanded] 1
+[sst_vpaned_height] 233
+@29
+sudoku_puzzle.clk
+@28
+sudoku_puzzle.reset
+sudoku_puzzle.start_solve
+sudoku_puzzle.busy
+sudoku_puzzle.stuck
+sudoku_puzzle.solved
+sudoku_puzzle.we[2:0]
+sudoku_puzzle.oe
+@22
+sudoku_puzzle.address[4:0]
+sudoku_puzzle.data[80:0]
+@28
+sudoku_puzzle.abort
+[pattern_trace] 1
+[pattern_trace] 0

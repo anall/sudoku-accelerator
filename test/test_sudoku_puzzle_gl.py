@@ -54,7 +54,26 @@ async def read_puzzle(dut):
 
   return puzzle
 
-async def test_puzzle(dut,o_puzzle,s_puzzle,solvable):
+@cocotb.test()
+async def test_sudoku_puzzle(dut):
+  dut.VPWR <= 1
+  dut.VGND <= 0
+
+  clock = Clock(dut.clk, 30, units="ns")
+  cocotb.fork(clock.start())
+
+  z81 =  BinaryValue("z")
+  dut.data <= z81
+  dut.address <= 0
+  dut.oe <= 0
+  dut.we <= 0
+  dut.start_solve <= 0
+  dut.abort <= 0
+  await reset(dut)
+
+  #           111222333444555666777888999111222333444555666777888999111222333444555666777888999
+  o_puzzle = "5 1 6  24 6 4   73 7    1 5     72 88 239 5473  284 9   56  4   2    31 946  17  "
+  s_puzzle = "581763924269415873473928165694157238812396547357284691135672489728549316946831752"
   await load_puzzle(dut,o_puzzle)
 
   print(o_puzzle)
@@ -78,43 +97,15 @@ async def test_puzzle(dut,o_puzzle,s_puzzle,solvable):
   if ( dut.busy == 1 ):
     print("solver locked up -- FAILED TO ABORT SOLVER! Cannot read out puzzle state")
     assert( dut.busy == 0 )
-    await reset(dut)
   else:
     f_puzzle = await read_puzzle(dut)
 
     if ( n >= 1000 ):
       print("solver possibly locked up (hit max iteration limit), puzzle progress below")
-    if ( dut.stuck == 1 and solvable ):
+    if ( dut.stuck == 1 ):
       print("solver exited stuck (failed to progress puzzle), puzzle progress below")
-    if ( dut.stuck == 0 and not solvable ):
-      print("solver somehow solved unsolvable puzzle, puzzle below")
 
     print(f_puzzle)
   
-    assert( n < 1000 and (
-      (solvable and dut.solved == 1 and dut.stuck == 0 ) or
-      (solvable and dut.solved == 0 and dut.stuck == 1 )))
+    assert( n < 1000 and dut.solved == 1 and dut.stuck == 0 )
     assert( s_puzzle == f_puzzle )
-
-@cocotb.test()
-async def test_sudoku_puzzle(dut):
-  clock = Clock(dut.clk, 10, units="us")
-  cocotb.fork(clock.start())
-
-  z81 =  BinaryValue("z")
-  dut.data <= z81
-  dut.address <= 0
-  dut.oe <= 0
-  dut.we <= 0
-  dut.start_solve <= 0
-  dut.abort <= 0
-  await reset(dut)
-
-  #           111222333444555666777888999111222333444555666777888999111222333444555666777888999
-  await test_puzzle(dut,
-    "5 1 6  24 6 4   73 7    1 5     72 88 239 5473  284 9   56  4   2    31 946  17  ",
-    "581763924269415873473928165694157238812396547357284691135672489728549316946831752",1)
-
-  await test_puzzle(dut,
-    "4   2     35     778 39   45 4      6 2 8 7 3      5 91   48 353     28     3   6",
-    "4   2   8 35     778 39   45 4     26 2 8 7 38     5 91   489353     281    3 476",0)

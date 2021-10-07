@@ -1,22 +1,23 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Tue Oct  5 02:16:26 2021
+[*] Thu Oct  7 00:48:40 2021
 [*]
-[dumpfile] "/home/anall/Projects/zero-to-asic/sudoku-accelerator/sudoku_puzzle.vcd"
-[dumpfile_mtime] "Tue Oct  5 02:14:20 2021"
-[dumpfile_size] 229309
-[savefile] "/home/anall/Projects/zero-to-asic/sudoku-accelerator/sudoku_puzzle.gtkw"
-[timestart] 0
+[dumpfile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/sudoku_puzzle.vcd"
+[dumpfile_mtime] "Thu Oct  7 00:15:08 2021"
+[dumpfile_size] 368496
+[savefile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/sudoku_puzzle.gtkw"
+[timestart] 2691000
 [size] 1466 820
 [pos] 348 0
-*-19.000000 1990000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-17.000000 3125000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] sudoku_puzzle.
 [sst_width] 205
 [signals_width] 382
 [sst_expanded] 1
 [sst_vpaned_height] 236
-@28
+@29
 sudoku_puzzle.clk
+@28
 sudoku_puzzle.reset
 sudoku_puzzle.start_solve
 sudoku_puzzle.busy
@@ -34,11 +35,9 @@ sudoku_puzzle.we[2:0]
 sudoku_puzzle.oe
 sudoku_puzzle.we_c[2:0]
 sudoku_puzzle.oe_c
-@23
-sudoku_puzzle.data[80:0]
 @22
+sudoku_puzzle.data[80:0]
 sudoku_puzzle.data_i[80:0]
-sudoku_puzzle.data_c[80:0]
 @28
 sudoku_puzzle.row_en_decode[8:0]
 sudoku_puzzle.row_en_c[8:0]
