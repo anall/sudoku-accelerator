@@ -1,0 +1,47 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Fri Oct  8 21:54:58 2021
+[*]
+[dumpfile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/vcd/simpleuart_wb.vcd"
+[dumpfile_mtime] "Fri Oct  8 21:52:54 2021"
+[dumpfile_size] 1320075
+[savefile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/gtkw/simpleuart_wb.gtkw"
+[timestart] 0
+[size] 1527 692
+[pos] 198 38
+*-20.000000 2508800 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] simpleuart_wb.
+[sst_width] 205
+[signals_width] 271
+[sst_expanded] 1
+[sst_vpaned_height] 191
+@29
+simpleuart_wb.wb_clk_i
+@28
+simpleuart_wb.wb_rst_i
+simpleuart_wb.simpleuart.enabled
+simpleuart_wb.ser_rx
+simpleuart_wb.ser_tx
+@22
+simpleuart_wb.wb_adr_i[31:0]
+simpleuart_wb.wb_dat_i[31:0]
+simpleuart_wb.wb_dat_o[31:0]
+@28
+simpleuart_wb.wb_we_i
+simpleuart_wb.wb_ack_o
+simpleuart_wb.wb_cyc_i
+simpleuart_wb.wb_stb_i
+@22
+simpleuart_wb.wb_sel_i[3:0]
+@28
+simpleuart_wb.interrupt
+@22
+simpleuart_wb.simpleuart.reg_cfg_di[31:0]
+simpleuart_wb.simpleuart.reg_cfg_do[31:0]
+@28
+simpleuart_wb.simpleuart.reg_cfg_we
+@22
+simpleuart_wb.simpleuart.recv_fifo_r[3:0]
+simpleuart_wb.simpleuart.recv_fifo_w[3:0]
+[pattern_trace] 1
+[pattern_trace] 0

@@ -1,0 +1,56 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Fri Oct  8 20:55:40 2021
+[*]
+[dumpfile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/vcd/simpleuart.vcd"
+[dumpfile_mtime] "Fri Oct  8 20:54:31 2021"
+[dumpfile_size] 2359744
+[savefile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/gtkw/simpleuart.gtkw"
+[timestart] 43595550
+[size] 1278 706
+[pos] 564 0
+*-13.000000 43607001 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 205
+[signals_width] 422
+[sst_expanded] 1
+[sst_vpaned_height] 196
+@28
+simpleuart.clk
+simpleuart.resetn
+simpleuart.ser_rx
+simpleuart.ser_tx
+@22
+simpleuart.reg_div_di[31:0]
+simpleuart.reg_div_do[31:0]
+simpleuart.reg_div_we[3:0]
+simpleuart.cfg_divider[31:0]
+simpleuart.reg_cfg_di[31:0]
+@28
+simpleuart.reg_cfg_do[31:0]
+simpleuart.reg_cfg_we
+simpleuart.enabled
+@22
+simpleuart.recv_fifo_r[3:0]
+simpleuart.recv_fifo_w[3:0]
+simpleuart.reg_dat_di[31:0]
+simpleuart.reg_dat_do[31:0]
+@28
+simpleuart.reg_dat_re
+simpleuart.reg_dat_we
+simpleuart.reg_dat_wait
+simpleuart.recv_valid
+simpleuart.interrupt
+simpleuart.recv_ie
+simpleuart.send_empty_ie
+simpleuart.send_fifo_empty
+simpleuart.send_fifo_full
+@29
+simpleuart.send_fifo_idle
+@22
+simpleuart.send_fifo_r[3:0]
+simpleuart.send_fifo_w[3:0]
+simpleuart.send_pattern[9:0]
+simpleuart.send_bitcnt[3:0]
+simpleuart.send_divcnt[31:0]
+[pattern_trace] 1
+[pattern_trace] 0
