@@ -24,7 +24,7 @@ test_sudoku_cell:
 show_synth_%: src/%.v
 	yosys -p "read_verilog $<; proc; opt; show -colors 2 -width -signed"
 
-show_%: %.vcd %.gtkw
+show_%: vcd/%.vcd gtkw/%.gtkw
 	gtkwave $^ 
 
 clean:
