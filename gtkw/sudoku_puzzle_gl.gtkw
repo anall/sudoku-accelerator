@@ -1,34 +1,35 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Thu Oct  7 12:50:28 2021
+[*] Fri Oct  8 01:14:33 2021
 [*]
 [dumpfile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/sudoku_puzzle.vcd"
-[dumpfile_mtime] "Thu Oct  7 12:47:34 2021"
-[dumpfile_size] 25201049
+[dumpfile_mtime] "Fri Oct  8 00:54:18 2021"
+[dumpfile_size] 24121237
 [savefile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/sudoku_puzzle_gl.gtkw"
 [timestart] 0
 [size] 1679 811
 [pos] 94 45
-*-18.000000 3910000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-17.000000 11000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] sudoku_puzzle.
 [sst_width] 205
 [signals_width] 308
 [sst_expanded] 1
 [sst_vpaned_height] 233
-@28
+@29
 sudoku_puzzle.clk
+@28
 sudoku_puzzle.reset
 sudoku_puzzle.start_solve
 sudoku_puzzle.busy
 sudoku_puzzle.stuck
+sudoku_puzzle.illegal
 sudoku_puzzle.solved
 sudoku_puzzle.address[4:0]
 sudoku_puzzle.we[2:0]
 @22
 sudoku_puzzle.wdata[80:0]
-@23
 sudoku_puzzle.rdata[80:0]
 @28
 sudoku_puzzle.abort
-sudoku_puzzle.\cell00.latch_singleton
 [pattern_trace] 1
 [pattern_trace] 0

@@ -1,3 +1,18 @@
+/* SPDX-FileCopyrightText: 2021 Andrea Nall
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+   SPDX-License-Identifier: Apache-2.0
+*/
 `default_nettype none
 `timescale 1ns/1ns
 module sudoku_puzzle (
@@ -13,7 +28,7 @@ module sudoku_puzzle (
   output wire [80:0] rdata,
 
   // taaaa - 1 bit for type, 4 for address
-  inout wire [4:0] address,
+  input wire [4:0] address,
 
   // low/med/high oe/we
   input wire [2:0] we,
@@ -27,22 +42,29 @@ module sudoku_puzzle (
   output reg illegal
 );
 
-wire [9:1] values [80:0];
+wire [8:0] values [80:0];
 
-reg [9:1] valid_row; // used as a temporary
-reg [9:1] valid_col [8:0]; // need the full set, as these will be set at the end
-reg [9:1] valid_box [2:0]; // only need three of these
+reg [8:0] valid_row;       // used as a temporary
+reg [8:0] valid_col [8:0]; // need the full set, as these will be set at the end
+reg [8:0] valid_box [2:0]; // only need three of these
 
-reg latch_valid = 0;
+reg [3:0] count_row [8:0];
+reg [3:0] count_col [8:0];
+reg [3:0] count_box [2:0];
+
+reg we_i = 0;
+reg cell_addr_i = 0;
 reg latch_singleton = 0;
 
-localparam STATE_IDLE       = 0;
-localparam STATE_LSINGLE    = 1;
-localparam STATE_ITER_ROW   = 2;
-localparam STATE_SAVE_ROW   = 3;
-localparam STATE_SAVE_BOX   = 4;
-localparam STATE_SAVE_COL   = 5;
-
+localparam STATE_IDLE             = 0;
+localparam STATE_LSINGLE          = 1;
+localparam STATE_ELIM_ITER_ROW    = 2;
+localparam STATE_ELIM_SAVE_ROW    = 3;
+localparam STATE_ELIM_SAVE_BOX    = 4;
+localparam STATE_ELIM_SAVE_COL    = 5;
+localparam STATE_NAKED_ITER_ROW   = 6;
+localparam STATE_NAKED_PROC_ROW   = 7;
+localparam STATE_NAKED_SAVE_ROW   = 8;
 reg [3:0] state = STATE_IDLE;
 
 assign busy = state != STATE_IDLE;
@@ -72,23 +94,23 @@ wire [80:0] rdata_c =
   row_en_c[5] ? rdata_cell[5] :
   row_en_c[6] ? rdata_cell[6] :
   row_en_c[7] ? rdata_cell[7] :
-  row_en_c[8] ? rdata_cell[8] : '0;
+  row_en_c[8] ? rdata_cell[8] : 0;
 
 assign rdata = busy ? ~0 : rdata_c;
 wire [80:0] wdata_c = busy ? wdata_i : wdata;
 
-// internal versions of oe, and row_en, and data ( we is latch_valid )
+// internal versions of oe, and row_en, and data ( we is we_i )
 reg [8:0] row_en_i;
 reg [80:0] wdata_i;
 
 // we, oe and row_en for cells (which will either be external or internal depending on busy state)
-wire [2:0] we_c = busy ? {latch_valid,latch_valid,latch_valid} : we;
+wire [2:0] we_c = busy ? {we_i,we_i,we_i} : we;
 wire [8:0] row_en_c = busy ? row_en_i : row_en_decode;
 
 wire is_singleton;
 wire is_illegal;
 
-wire cell_addr = busy ? latch_valid : address[4];
+wire cell_addr = busy ? cell_addr_i : address[4];
 
 always @(posedge clk) begin
   if ( reset ) begin
@@ -97,113 +119,223 @@ always @(posedge clk) begin
     illegal <= 0;
 
     latch_singleton <= 0;
-    latch_valid <= 0;
+    we_i <= 0;
+    cell_addr_i <= 0;
 
     wdata_i <= 0;
     row_en_i <= 0;
   end else if ( busy ) begin // busy means 'not STATE_IDLE'
     if ( solved || is_illegal || abort ) begin // abort if we ever hit solved or abort (stuck will exit when encountered)
       latch_singleton <= 0;
-      latch_valid <= 0;
+      we_i <= 0;
+      cell_addr_i <= 0;
       row_en_i <= 0;
-      stuck <= (is_illegal ? 1 : 0);
+      stuck <= (is_illegal ? 1 : abort);
       illegal <= is_illegal;
       state <= STATE_IDLE;
-    end else if ( state == STATE_LSINGLE ) begin
-      if ( is_singleton || stuck ) begin // reuse "stuck" for first iteration
-        stuck <= 0;
-        row_en_i <= 1;
-        latch_singleton <= 0;
+    end else begin
+      case ( state )
+        STATE_LSINGLE : begin
+          integer c;
 
-        valid_col[0] <= 9'b111111111;
-        valid_col[1] <= 9'b111111111;
-        valid_col[2] <= 9'b111111111;
-        valid_col[3] <= 9'b111111111;
-        valid_col[4] <= 9'b111111111;
-        valid_col[5] <= 9'b111111111;
-        valid_col[6] <= 9'b111111111;
-        valid_col[7] <= 9'b111111111;
-        valid_col[8] <= 9'b111111111;
+          if ( is_singleton || stuck ) begin // reuse "stuck" for first iteration
+            stuck <= 0;
+            row_en_i <= 1;
+            latch_singleton <= 0;
 
-        valid_box[0] <= 9'b111111111;
-        valid_box[1] <= 9'b111111111;
-        valid_box[2] <= 9'b111111111;
+            for (c = 0; c < 9; c = c + 1) begin
+              valid_col[c] <= 9'b111111111;
+            end
 
-        state <= STATE_ITER_ROW;
-      end else begin
-        latch_singleton <= 0;
-        latch_valid <= 0;
-        row_en_i <= 0;
-        stuck <= 1;
-        state <= STATE_IDLE;
-      end
-    end else if ( state == STATE_ITER_ROW ) begin
-      valid_col[0] <= valid_col[0] & ~rdata_c[8:0];
-      valid_col[1] <= valid_col[1] & ~rdata_c[17:9];
-      valid_col[2] <= valid_col[2] & ~rdata_c[26:18];
-      valid_col[3] <= valid_col[3] & ~rdata_c[35:27];
-      valid_col[4] <= valid_col[4] & ~rdata_c[44:36];
-      valid_col[5] <= valid_col[5] & ~rdata_c[53:45];
-      valid_col[6] <= valid_col[6] & ~rdata_c[62:54];
-      valid_col[7] <= valid_col[7] & ~rdata_c[71:63];
-      valid_col[8] <= valid_col[8] & ~rdata_c[80:72];
+            for (c = 0; c < 3; c = c + 1) begin
+              valid_box[c] <= 9'b111111111;
+            end
 
-      valid_box[0] <= valid_box[0] & ~rdata_c[8:0]   & ~rdata_c[17:9]  & ~rdata_c[26:18];
-      valid_box[1] <= valid_box[1] & ~rdata_c[35:27] & ~rdata_c[44:36] & ~rdata_c[53:45];
-      valid_box[2] <= valid_box[2] & ~rdata_c[62:54] & ~rdata_c[71:63] & ~rdata_c[80:72];
-      
-      // temporary
-      valid_row = ~rdata_c[8:0]&~rdata_c[17:9]&~rdata_c[26:18]&~rdata_c[35:27]&~rdata_c[44:36]&~rdata_c[53:45]&~rdata_c[62:54]&~rdata_c[71:63]&~rdata_c[80:72];
-      wdata_i <= {
-        valid_row,valid_row,valid_row,
-        valid_row,valid_row,valid_row,
-        valid_row,valid_row,valid_row
-      };
+            state <= STATE_ELIM_ITER_ROW;
+          end else begin
+            stuck <= 1;
+            row_en_i <= 1;
+            cell_addr_i <= 1;
+            latch_singleton <= 0;
 
-      latch_valid <= 1;
-      state <= STATE_SAVE_ROW;
-    end else if ( state == STATE_SAVE_ROW ) begin
-      if ( row_en_i == 9'b100 ) begin
-        row_en_i <= 9'b111;
-        wdata_i <= {valid_box[2],valid_box[2],valid_box[2],valid_box[1],valid_box[1],valid_box[1],valid_box[0],valid_box[0],valid_box[0]};
-        state <= STATE_SAVE_BOX;
-      end else if ( row_en_i == 9'b100000 ) begin
-        row_en_i <= 9'b111000;
-        wdata_i <= {valid_box[2],valid_box[2],valid_box[2],valid_box[1],valid_box[1],valid_box[1],valid_box[0],valid_box[0],valid_box[0]};
-        state <= STATE_SAVE_BOX;
-      end else if ( row_en_i == 9'b100000000 ) begin
-        row_en_i <= 9'b111000000;
-        wdata_i <= {valid_box[2],valid_box[2],valid_box[2],valid_box[1],valid_box[1],valid_box[1],valid_box[0],valid_box[0],valid_box[0]};
-        state <= STATE_SAVE_BOX;
-      end else begin
-        latch_valid <= 0;
-        row_en_i <= {row_en_i[7:0],1'b0};
-        state <= STATE_ITER_ROW;
-      end
-    end else if ( state == STATE_SAVE_BOX ) begin
-      if ( row_en_i == 9'b111000000 ) begin
-        row_en_i <= 9'b111111111;
-        wdata_i <= {valid_col[8],valid_col[7],valid_col[6],valid_col[5],valid_col[4],valid_col[3],valid_col[2],valid_col[1],valid_col[0]};
-        state <= STATE_SAVE_COL;
-      end else begin
-        latch_valid <= 0;
-        row_en_i <= ( row_en_i == 9'b111000 ) ? 9'b1000000 : 9'b1000;
+            count_row[c] <= 0;
+            for (integer c = 0; c < 9; c = c + 1) begin
+              count_col[c] <= 0;
+            end
 
-        valid_box[0] <= 9'b111111111;
-        valid_box[1] <= 9'b111111111;
-        valid_box[2] <= 9'b111111111;
+            for (integer c = 0; c < 3; c = c + 1) begin
+              count_box[c] <= 0;
+            end
 
-        state <= STATE_ITER_ROW;
-      end
-    end else if ( state == STATE_SAVE_COL ) begin
-      latch_valid <= 0;
-      latch_singleton <= 1;
-      row_en_i <= 0;
-      state <= STATE_LSINGLE;
+            state <= STATE_NAKED_ITER_ROW;
+
+            /*latch_singleton <= 0;
+            we_i <= 0;
+            row_en_i <= 0;
+            stuck <= 1;
+            state <= STATE_IDLE;*/
+          end
+        end
+        STATE_ELIM_ITER_ROW : begin
+          integer c;
+          integer box[3];
+
+          valid_row = 9'b111111111;
+          for (c = 0; c < 9; c = c + 1) begin
+            valid_col[c] <= valid_col[c] & ~rdata_c[9*(c+1)-1 -: 9];
+            valid_box[c/3] = valid_box[c/3] & ~rdata_c[9*(c+1)-1 -: 9];
+            valid_row = valid_row & ~rdata_c[9*(c+1)-1 -: 9];
+          end
+
+          for (c = 0; c < 9; c = c + 1) begin
+            wdata_i[9*(c+1)-1 -: 9] <= valid_row;
+          end
+
+          we_i <= 1;
+          cell_addr_i <= 1;
+          state <= STATE_ELIM_SAVE_ROW;
+        end
+        STATE_ELIM_SAVE_ROW : begin
+          integer c;
+          for (c = 0; c < 9; c = c + 1) begin
+            wdata_i[9*(c+1)-1 -: 9] <= valid_box[c/3];
+          end
+          //wdata_i <= {valid_box[2],valid_box[2],valid_box[2],valid_box[1],valid_box[1],valid_box[1],valid_box[0],valid_box[0],valid_box[0]};
+          if ( row_en_i[2] ) begin
+            row_en_i <= 9'b111;
+            state <= STATE_ELIM_SAVE_BOX;
+          end else if ( row_en_i[5] ) begin
+            row_en_i <= 9'b111000;
+            state <= STATE_ELIM_SAVE_BOX;
+          end else if ( row_en_i[8] ) begin
+            row_en_i <= 9'b111000000;
+            state <= STATE_ELIM_SAVE_BOX;
+          end else begin
+            we_i <= 0;
+            cell_addr_i <= 0;
+            row_en_i <= {row_en_i[7:0],1'b0};
+            state <= STATE_ELIM_ITER_ROW;
+          end
+        end
+        STATE_ELIM_SAVE_BOX : begin
+          integer c;
+          if ( row_en_i[8] ) begin
+            row_en_i <= 9'b111111111;
+            for (c = 0; c < 9; c = c + 1) begin
+              wdata_i[9*(c+1)-1 -: 9] <= valid_col[c];
+            end
+            state <= STATE_ELIM_SAVE_COL;
+          end else begin
+            we_i <= 0;
+            cell_addr_i <= 0;
+            row_en_i <= {2'b0,row_en_i[5],2'b0,row_en_i[2],3'b0}; // --x--y---
+
+            for (c = 0; c < 3; c = c + 1) begin
+              valid_box[c] <= 9'b111111111;
+            end
+
+            state <= STATE_ELIM_ITER_ROW;
+          end
+        end
+        STATE_ELIM_SAVE_COL : begin
+          we_i <= 0;
+          cell_addr_i <= 0;
+          latch_singleton <= 1;
+          row_en_i <= 0;
+          state <= STATE_LSINGLE;
+        end
+        STATE_NAKED_ITER_ROW : begin
+          integer c;
+          integer n;
+          integer t [3:0];
+
+          for (n = 0; n < 9; n = n + 1) begin
+            t[0] = 0;
+            t[1] = 0;
+            t[2] = 0;
+            for (c = 0; c < 9; c = c + 1) begin
+              t[c/3] = t[c/3] + rdata_c[9*c+n];
+              count_col[c][n] <= count_col[c][n] + rdata_c[9*c+n];
+            end
+            count_row[n] <= t[0] + t[1] + t[2];
+            for (c = 0; c < 3; c = c + 1)
+              count_box[c] <= t[c];
+          end
+
+          wdata_i <= rdata_c; // Stash this as we need the valid values
+          cell_addr_i <= 0; // PROC_ROW needs the values
+          state <= STATE_NAKED_PROC_ROW;
+        end
+        STATE_NAKED_PROC_ROW : begin
+          integer c;
+          integer t;
+          for (c = 0; c < 9; c = c + 1) begin
+            valid_row[c] = count_row[c] == 1;
+          end
+
+          if ( valid_row ) begin
+            for (c = 0; c < 9; c = c + 1) begin
+              t = wdata_i[9*(c+1)-1 -: 9] & valid_row;
+              wdata_i[9*(c+1)-1 -: 9] <= t ? t : rdata_c[9*(c+1)-1 -: 9];
+            end
+            we_i <= 1;
+            state <= STATE_NAKED_SAVE_ROW;
+          end else begin
+            if ( row_en_i[8] ) begin
+              if ( stuck ) begin
+                we_i <= 0;
+                state <= STATE_IDLE;
+              end else begin
+                row_en_i <= 1;
+                latch_singleton <= 0;
+
+                for (c = 0; c < 9; c = c + 1) begin
+                  valid_col[c] <= 9'b111111111;
+                end
+
+                for (c = 0; c < 3; c = c + 1) begin
+                  valid_box[c] <= 9'b111111111;
+                end
+
+                state <= STATE_ELIM_ITER_ROW;
+              end
+            end else begin
+              cell_addr_i <= 1;
+              row_en_i <= {row_en_i[7:0],1'b0};
+              state <= STATE_NAKED_ITER_ROW;
+            end
+          end
+        end
+        STATE_NAKED_SAVE_ROW : begin
+          integer c;
+
+          stuck <= 0;
+          we_i <= 0;
+          if ( row_en_i[8] ) begin
+            row_en_i <= 1;
+            latch_singleton <= 0;
+
+            for (c = 0; c < 9; c = c + 1) begin
+              valid_col[c] <= 9'b111111111;
+            end
+
+            for (c = 0; c < 3; c = c + 1) begin
+              valid_box[c] <= 9'b111111111;
+            end
+
+            state <= STATE_ELIM_ITER_ROW;
+          end else begin
+            cell_addr_i <= 1;
+            row_en_i <= {row_en_i[7:0],1'b0};
+            state <= STATE_NAKED_ITER_ROW;
+          end
+        end
+      endcase
     end
   end else if ( start_solve && ~solved ) begin
     latch_singleton <= 1;
-    latch_valid <= 0;
+    we_i <= 0;
+    cell_addr_i <= 0;
     stuck <= 1;
     illegal <= 0;
     state <= STATE_LSINGLE;
@@ -214,28 +346,37 @@ end
 // Following generated using tools/generate_cells.pl
 wire [80:0] cell_singleton;
 assign is_singleton = 0
-     | cell_singleton[80] | cell_singleton[79] | cell_singleton[78] | cell_singleton[77] | cell_singleton[76] | cell_singleton[75] | cell_singleton[74] | cell_singleton[73] | cell_singleton[72]
-     | cell_singleton[71] | cell_singleton[70] | cell_singleton[69] | cell_singleton[68] | cell_singleton[67] | cell_singleton[66] | cell_singleton[65] | cell_singleton[64] | cell_singleton[63]
-     | cell_singleton[62] | cell_singleton[61] | cell_singleton[60] | cell_singleton[59] | cell_singleton[58] | cell_singleton[57] | cell_singleton[56] | cell_singleton[55] | cell_singleton[54]
-     | cell_singleton[53] | cell_singleton[52] | cell_singleton[51] | cell_singleton[50] | cell_singleton[49] | cell_singleton[48] | cell_singleton[47] | cell_singleton[46] | cell_singleton[45]
-     | cell_singleton[44] | cell_singleton[43] | cell_singleton[42] | cell_singleton[41] | cell_singleton[40] | cell_singleton[39] | cell_singleton[38] | cell_singleton[37] | cell_singleton[36]
-     | cell_singleton[35] | cell_singleton[34] | cell_singleton[33] | cell_singleton[32] | cell_singleton[31] | cell_singleton[30] | cell_singleton[29] | cell_singleton[28] | cell_singleton[27]
-     | cell_singleton[26] | cell_singleton[25] | cell_singleton[24] | cell_singleton[23] | cell_singleton[22] | cell_singleton[21] | cell_singleton[20] | cell_singleton[19] | cell_singleton[18]
-     | cell_singleton[17] | cell_singleton[16] | cell_singleton[15] | cell_singleton[14] | cell_singleton[13] | cell_singleton[12] | cell_singleton[11] | cell_singleton[10] | cell_singleton[9]
-     | cell_singleton[8] | cell_singleton[7] | cell_singleton[6] | cell_singleton[5] | cell_singleton[4] | cell_singleton[3] | cell_singleton[2] | cell_singleton[1] | cell_singleton[0];
+      | cell_singleton[80] | cell_singleton[79] | cell_singleton[78] | cell_singleton[77] | cell_singleton[76] | cell_singleton[75] | cell_singleton[74] | cell_singleton[73] | cell_singleton[72]
+      | cell_singleton[71] | cell_singleton[70] | cell_singleton[69] | cell_singleton[68] | cell_singleton[67] | cell_singleton[66] | cell_singleton[65] | cell_singleton[64] | cell_singleton[63]
+      | cell_singleton[62] | cell_singleton[61] | cell_singleton[60] | cell_singleton[59] | cell_singleton[58] | cell_singleton[57] | cell_singleton[56] | cell_singleton[55] | cell_singleton[54]
+      | cell_singleton[53] | cell_singleton[52] | cell_singleton[51] | cell_singleton[50] | cell_singleton[49] | cell_singleton[48] | cell_singleton[47] | cell_singleton[46] | cell_singleton[45]
+      | cell_singleton[44] | cell_singleton[43] | cell_singleton[42] | cell_singleton[41] | cell_singleton[40] | cell_singleton[39] | cell_singleton[38] | cell_singleton[37] | cell_singleton[36]
+      | cell_singleton[35] | cell_singleton[34] | cell_singleton[33] | cell_singleton[32] | cell_singleton[31] | cell_singleton[30] | cell_singleton[29] | cell_singleton[28] | cell_singleton[27]
+      | cell_singleton[26] | cell_singleton[25] | cell_singleton[24] | cell_singleton[23] | cell_singleton[22] | cell_singleton[21] | cell_singleton[20] | cell_singleton[19] | cell_singleton[18]
+      | cell_singleton[17] | cell_singleton[16] | cell_singleton[15] | cell_singleton[14] | cell_singleton[13] | cell_singleton[12] | cell_singleton[11] | cell_singleton[10] | cell_singleton[9]
+      | cell_singleton[8] | cell_singleton[7] | cell_singleton[6] | cell_singleton[5] | cell_singleton[4] | cell_singleton[3] | cell_singleton[2] | cell_singleton[1] | cell_singleton[0];
 wire [80:0] cell_illegal;
-assign is_illegal = 0 | cell_illegal[80] | cell_illegal[79] | cell_illegal[78] | cell_illegal[77] | cell_illegal[76] | cell_illegal[75] | cell_illegal[74] | cell_illegal[73] | cell_illegal[72] | cell_illegal[71] | cell_illegal[70] | cell_illegal[69] | cell_illegal[68] | cell_illegal[67] | cell_illegal[66] | cell_illegal[65] | cell_illegal[64] | cell_illegal[63] | cell_illegal[62] | cell_illegal[61] | cell_illegal[60] | cell_illegal[59] | cell_illegal[58] | cell_illegal[57] | cell_illegal[56] | cell_illegal[55] | cell_illegal[54] | cell_illegal[53] | cell_illegal[52] | cell_illegal[51] | cell_illegal[50] | cell_illegal[49] | cell_illegal[48] | cell_illegal[47] | cell_illegal[46] | cell_illegal[45] | cell_illegal[44] | cell_illegal[43] | cell_illegal[42] | cell_illegal[41] | cell_illegal[40] | cell_illegal[39] | cell_illegal[38] | cell_illegal[37] | cell_illegal[36] | cell_illegal[35] | cell_illegal[34] | cell_illegal[33] | cell_illegal[32] | cell_illegal[31] | cell_illegal[30] | cell_illegal[29] | cell_illegal[28] | cell_illegal[27] | cell_illegal[26] | cell_illegal[25] | cell_illegal[24] | cell_illegal[23] | cell_illegal[22] | cell_illegal[21] | cell_illegal[20] | cell_illegal[19] | cell_illegal[18] | cell_illegal[17] | cell_illegal[16] | cell_illegal[15] | cell_illegal[14] | cell_illegal[13] | cell_illegal[12] | cell_illegal[11] | cell_illegal[10] | cell_illegal[9] | cell_illegal[8] | cell_illegal[7] | cell_illegal[6] | cell_illegal[5] | cell_illegal[4] | cell_illegal[3] | cell_illegal[2] | cell_illegal[1] | cell_illegal[0];
+assign is_illegal = 0
+      | cell_illegal[80] | cell_illegal[79] | cell_illegal[78] | cell_illegal[77] | cell_illegal[76] | cell_illegal[75] | cell_illegal[74] | cell_illegal[73] | cell_illegal[72]
+      | cell_illegal[71] | cell_illegal[70] | cell_illegal[69] | cell_illegal[68] | cell_illegal[67] | cell_illegal[66] | cell_illegal[65] | cell_illegal[64] | cell_illegal[63]
+      | cell_illegal[62] | cell_illegal[61] | cell_illegal[60] | cell_illegal[59] | cell_illegal[58] | cell_illegal[57] | cell_illegal[56] | cell_illegal[55] | cell_illegal[54]
+      | cell_illegal[53] | cell_illegal[52] | cell_illegal[51] | cell_illegal[50] | cell_illegal[49] | cell_illegal[48] | cell_illegal[47] | cell_illegal[46] | cell_illegal[45]
+      | cell_illegal[44] | cell_illegal[43] | cell_illegal[42] | cell_illegal[41] | cell_illegal[40] | cell_illegal[39] | cell_illegal[38] | cell_illegal[37] | cell_illegal[36]
+      | cell_illegal[35] | cell_illegal[34] | cell_illegal[33] | cell_illegal[32] | cell_illegal[31] | cell_illegal[30] | cell_illegal[29] | cell_illegal[28] | cell_illegal[27]
+      | cell_illegal[26] | cell_illegal[25] | cell_illegal[24] | cell_illegal[23] | cell_illegal[22] | cell_illegal[21] | cell_illegal[20] | cell_illegal[19] | cell_illegal[18]
+      | cell_illegal[17] | cell_illegal[16] | cell_illegal[15] | cell_illegal[14] | cell_illegal[13] | cell_illegal[12] | cell_illegal[11] | cell_illegal[10] | cell_illegal[9]
+      | cell_illegal[8] | cell_illegal[7] | cell_illegal[6] | cell_illegal[5] | cell_illegal[4] | cell_illegal[3] | cell_illegal[2] | cell_illegal[1] | cell_illegal[0];
 wire [80:0] cell_solved;
 assign solved = 1
-     & cell_solved[80] & cell_solved[79] & cell_solved[78] & cell_solved[77] & cell_solved[76] & cell_solved[75] & cell_solved[74] & cell_solved[73] & cell_solved[72]
-     & cell_solved[71] & cell_solved[70] & cell_solved[69] & cell_solved[68] & cell_solved[67] & cell_solved[66] & cell_solved[65] & cell_solved[64] & cell_solved[63]
-     & cell_solved[62] & cell_solved[61] & cell_solved[60] & cell_solved[59] & cell_solved[58] & cell_solved[57] & cell_solved[56] & cell_solved[55] & cell_solved[54]
-     & cell_solved[53] & cell_solved[52] & cell_solved[51] & cell_solved[50] & cell_solved[49] & cell_solved[48] & cell_solved[47] & cell_solved[46] & cell_solved[45]
-     & cell_solved[44] & cell_solved[43] & cell_solved[42] & cell_solved[41] & cell_solved[40] & cell_solved[39] & cell_solved[38] & cell_solved[37] & cell_solved[36]
-     & cell_solved[35] & cell_solved[34] & cell_solved[33] & cell_solved[32] & cell_solved[31] & cell_solved[30] & cell_solved[29] & cell_solved[28] & cell_solved[27]
-     & cell_solved[26] & cell_solved[25] & cell_solved[24] & cell_solved[23] & cell_solved[22] & cell_solved[21] & cell_solved[20] & cell_solved[19] & cell_solved[18]
-     & cell_solved[17] & cell_solved[16] & cell_solved[15] & cell_solved[14] & cell_solved[13] & cell_solved[12] & cell_solved[11] & cell_solved[10] & cell_solved[9]
-     & cell_solved[8] & cell_solved[7] & cell_solved[6] & cell_solved[5] & cell_solved[4] & cell_solved[3] & cell_solved[2] & cell_solved[1] & cell_solved[0];
+      & cell_solved[80] & cell_solved[79] & cell_solved[78] & cell_solved[77] & cell_solved[76] & cell_solved[75] & cell_solved[74] & cell_solved[73] & cell_solved[72]
+      & cell_solved[71] & cell_solved[70] & cell_solved[69] & cell_solved[68] & cell_solved[67] & cell_solved[66] & cell_solved[65] & cell_solved[64] & cell_solved[63]
+      & cell_solved[62] & cell_solved[61] & cell_solved[60] & cell_solved[59] & cell_solved[58] & cell_solved[57] & cell_solved[56] & cell_solved[55] & cell_solved[54]
+      & cell_solved[53] & cell_solved[52] & cell_solved[51] & cell_solved[50] & cell_solved[49] & cell_solved[48] & cell_solved[47] & cell_solved[46] & cell_solved[45]
+      & cell_solved[44] & cell_solved[43] & cell_solved[42] & cell_solved[41] & cell_solved[40] & cell_solved[39] & cell_solved[38] & cell_solved[37] & cell_solved[36]
+      & cell_solved[35] & cell_solved[34] & cell_solved[33] & cell_solved[32] & cell_solved[31] & cell_solved[30] & cell_solved[29] & cell_solved[28] & cell_solved[27]
+      & cell_solved[26] & cell_solved[25] & cell_solved[24] & cell_solved[23] & cell_solved[22] & cell_solved[21] & cell_solved[20] & cell_solved[19] & cell_solved[18]
+      & cell_solved[17] & cell_solved[16] & cell_solved[15] & cell_solved[14] & cell_solved[13] & cell_solved[12] & cell_solved[11] & cell_solved[10] & cell_solved[9]
+      & cell_solved[8] & cell_solved[7] & cell_solved[6] & cell_solved[5] & cell_solved[4] & cell_solved[3] & cell_solved[2] & cell_solved[1] & cell_solved[0];
 wire [80:0] rdata_cell [0:8];
 sudoku_cell cell00( .clk(clk), .reset(reset),
   .rdata(rdata_cell[0][8:0]), .wdata(wdata_c[8:0]),

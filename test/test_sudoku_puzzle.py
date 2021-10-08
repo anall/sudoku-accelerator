@@ -1,3 +1,18 @@
+# SPDX-FileCopyrightText: 2021 Andrea Nall
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
+
 import cocotb
 from cocotb.binary import BinaryValue
 from cocotb.clock import Clock
@@ -15,7 +30,7 @@ async def load_puzzle(dut,puzzle):
   assert(len(puzzle) == 81)
 
   assert(dut.busy == 0)
-  values = list(map(lambda x: 0 if x == ' ' else int(x),puzzle))
+  values = list(map(lambda x: 0 if x == '.' else int(x),puzzle))
   dut.we <= 0b111
   for row in range(9):
     val = 0
@@ -44,7 +59,7 @@ async def read_puzzle(dut):
       dval = val & 0b111111111
       cur_number = next(filter(lambda v: val & 1<<v,range(9)),-1)+1
       if ( cur_number == 0 ):
-        puzzle = puzzle + ' '
+        puzzle = puzzle + '.'
       else:
         puzzle = puzzle + str(cur_number)
       val = val >> 9
@@ -116,15 +131,16 @@ async def test_sudoku_puzzle(dut):
   await reset(dut)
 
   await test_puzzle(dut,
-    "5 1 6  24 6 4   73 7    1 5     72 88 239 5473  284 9   56  4   2    31 946  17  ",
+    "5.1.6..24.6.4...73.7....1.5.....72.88.239.5473..284.9...56..4...2....31.946..17..",
     "581763924269415873473928165694157238812396547357284691135672489728549316946831752",1)
 
   await test_puzzle(dut,
     #aaabbbcccaaabbbcccaaabbbcccaaabbbcccaaabbbcccaaabbbcccaaabbbcccaaabbbcccaaabbbccc
-    "5 1 62 24 624   73 7    1 5     72 88 239 5473  284 9   56  4   2    31 946  17  ",
-    "5 1 62 24 624   7347  3 1 5     72 88123965473 728469   56  48 72    31 946  17 2",0)
+    "5.1.62.24.624...73.7....1.5.....72.88.239.5473..284.9...56..4...2....31.946..17..",
+    "5.1.62.24.624...7347..3.1.5.....72.88123965473.728469...56..48.72....31.946..17.2",0)
   assert( dut.illegal == 1 )
 
   await test_puzzle(dut,
-    "4   2     35     778 39   45 4      6 2 8 7 3      5 91   48 353     28     3   6",
-    "4   2   8 35     778 39   45 4     26 2 8 7 38     5 91   489353     281    3 476",0)
+    "4...2.....35.....778.39...45.4......6.2.8.7.3......5.91...48.353.....28.....3...6",
+    "469127358235864197781395624594673812612589743873412569126748935347956281958231476",1)
+

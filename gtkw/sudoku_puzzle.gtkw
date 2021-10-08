@@ -1,24 +1,26 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Thu Oct  7 12:58:21 2021
+[*] Fri Oct  8 17:32:14 2021
 [*]
 [dumpfile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/sudoku_puzzle.vcd"
-[dumpfile_mtime] "Thu Oct  7 12:50:37 2021"
-[dumpfile_size] 444342
+[dumpfile_mtime] "Fri Oct  8 17:25:32 2021"
+[dumpfile_size] 1309679
 [savefile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/sudoku_puzzle.gtkw"
-[timestart] 298
+[timestart] 8436
 [size] 1466 820
-[pos] 181 51
-*-7.000000 510 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] 168 63
+*-7.000000 8950 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] sudoku_puzzle.
 [sst_width] 205
 [signals_width] 382
 [sst_expanded] 1
 [sst_vpaned_height] 236
-@28
+@29
 sudoku_puzzle.clk
+@28
 sudoku_puzzle.reset
 sudoku_puzzle.start_solve
+sudoku_puzzle.abort
 sudoku_puzzle.busy
 sudoku_puzzle.solved
 sudoku_puzzle.stuck
@@ -43,9 +45,8 @@ sudoku_puzzle.rdata_c[80:0]
 sudoku_puzzle.wdata[80:0]
 sudoku_puzzle.wdata_i[80:0]
 sudoku_puzzle.wdata_c[80:0]
-@29
-sudoku_puzzle.cell_addr
 @28
+sudoku_puzzle.cell_addr
 sudoku_puzzle.row_en_c[8:0]
 sudoku_puzzle.row_en_i[8:0]
 @22
@@ -59,8 +60,9 @@ sudoku_puzzle.cell_illegal[80:0]
 sudoku_puzzle.is_illegal
 sudoku_puzzle.we[2:0]
 sudoku_puzzle.latch_singleton
-sudoku_puzzle.latch_valid
 @22
 sudoku_puzzle.state[3:0]
+@28
+sudoku_puzzle.valid_row[8:0]
 [pattern_trace] 1
 [pattern_trace] 0
