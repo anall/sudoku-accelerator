@@ -14,6 +14,12 @@ test_sudoku_puzzle_gl:
 	iverilog -o sim_build/sim.vvp -s sudoku_puzzle -s dump -g2012 gl/sudoku_puzzle.lvs.powered.v test/dump_sudoku_puzzle.v -I $(PDK_ROOT)/sky130A
 	GATELEVEL=1 PYTHONOPTIMIZE=${NOASSERT} MODULE=test.test_sudoku_puzzle vvp -M $$(cocotb-config --prefix)/cocotb/libs -m libcocotbvpi_icarus sim_build/sim.vvp
 
+test_sudoku_puzzle_wb:
+	rm -rf sim_build/
+	mkdir sim_build/
+	iverilog -o sim_build/sim.vvp -s sudoku_puzzle_wb -s dump -g2012 src/sudoku_puzzle_wb.v src/sudoku_puzzle.v src/sudoku_cell.v test/dump_sudoku_puzzle_wb.v
+	PYTHONOPTIMIZE=${NOASSERT} MODULE=test.test_sudoku_puzzle_wb vvp -M $$(cocotb-config --prefix)/cocotb/libs -m libcocotbvpi_icarus sim_build/sim.vvp
+
 
 test_sudoku_cell:
 	rm -rf sim_build/

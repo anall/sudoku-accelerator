@@ -1,0 +1,46 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Sat Oct  9 05:18:59 2021
+[*]
+[dumpfile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/vcd/sudoku_puzzle_wb.vcd"
+[dumpfile_mtime] "Sat Oct  9 05:17:34 2021"
+[dumpfile_size] 393019
+[savefile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/gtkw/sudoku_puzzle_wb.gtkw"
+[timestart] 6440
+[size] 1306 801
+[pos] 111 0
+*-12.000000 23250 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] sudoku_puzzle_wb.
+[sst_width] 205
+[signals_width] 230
+[sst_expanded] 1
+[sst_vpaned_height] 229
+@28
+sudoku_puzzle_wb.clk
+sudoku_puzzle_wb.reset
+sudoku_puzzle_wb.wb_sel_i[3:0]
+@22
+sudoku_puzzle_wb.wb_adr_i[31:0]
+sudoku_puzzle_wb.wb_dat_i[31:0]
+sudoku_puzzle_wb.wb_dat_o[31:0]
+sudoku_puzzle_wb.pzl_wdata_i[80:0]
+sudoku_puzzle_wb.pzl_rdata[80:0]
+xpop0.result[3:0]
+xpop1.result[3:0]
+xpop2.result[3:0]
+@28
+sudoku_puzzle_wb.wb_ack_o
+sudoku_puzzle_wb.wb_we_i
+sudoku_puzzle_wb.wb_stb_i
+sudoku_puzzle_wb.wb_cyc_i
+sudoku_puzzle_wb.addr_sel
+sudoku_puzzle_wb.puzzles_sel
+sudoku_puzzle_wb.pzl_busy[1:0]
+sudoku_puzzle_wb.pzl_stuck[1:0]
+@29
+sudoku_puzzle_wb.pzl_solved[1:0]
+@28
+sudoku_puzzle_wb.pzl_we_0[2:0]
+sudoku_puzzle_wb.pzl_we_1[2:0]
+[pattern_trace] 1
+[pattern_trace] 0
