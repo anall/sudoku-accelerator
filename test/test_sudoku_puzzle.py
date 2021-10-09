@@ -133,8 +133,6 @@ async def test_sudoku_puzzle(dut):
   dut.abort <= 0
 
   dut.allow_naked <= 1
-  dut.allow_naked_box <= 1
-  dut.allow_naked_col <= 1
   await reset(dut)
 
   await test_puzzle(dut,

@@ -42,9 +42,7 @@ module sudoku_puzzle (
   output reg illegal,
 
   // switches to disable the naked stuff, in case there are bugs
-  input wire allow_naked,
-  input wire allow_naked_box,
-  input wire allow_naked_col
+  input wire allow_naked
 );
 
 wire [8:0] values [80:0];
@@ -54,8 +52,6 @@ reg [8:0] valid_col [9]; // need the full set, as these will be set at the end
 reg [8:0] valid_box [3]; // only need three of these
 
 reg [3:0] count_row [9];
-reg [6:0] count_col [9][9];
-reg [6:0] count_box [3][9];
 
 reg cell_addr_i = 0;
 reg latch_singleton = 0;
@@ -143,8 +139,6 @@ always @(posedge clk) begin
     if ( solved || is_illegal || abort ) begin // abort if we ever hit solved or abort (stuck will exit when encountered)
       latch_singleton <= 0;
       we_i <= 0;
-      cell_addr_i <= 0;
-      row_en_i <= 0;
       stuck <= (is_illegal ? 1 : abort);
       illegal <= is_illegal;
       state <= STATE_IDLE;
@@ -177,17 +171,6 @@ always @(posedge clk) begin
             cell_addr_i <= 1;
 
             count_row[c] <= 0;
-            for (d = 0; d < 9; d = d + 1) begin
-              for (c = 0; c < 9; c = c + 1) begin
-                count_col[d][c] <= 0;
-              end
-            end
-
-            for (d = 0; d < 3; d = d + 1) begin
-              for (c = 0; c < 9; c = c + 1) begin
-                count_box[d][c] <= 0;
-              end
-            end
 
             if ( allow_naked ) begin
               state <= STATE_NAKED_ITER_ROW;
@@ -201,9 +184,6 @@ always @(posedge clk) begin
           integer c;
           integer box[3];
 
-          end else if ( row_en_i[8] ) begin
-            stuck <= 1;
-            state <= STATE_LSINGLE;
           valid_row = 9'b111111111;
           for (c = 0; c < 9; c = c + 1) begin
             valid_col[c] <= valid_col[c] & ~rdata_c[9*(c+1)-1 -: 9];
@@ -269,20 +249,14 @@ always @(posedge clk) begin
         STATE_NAKED_ITER_ROW : begin
           integer c;
           integer n;
-          integer t [3];
+          integer t;
 
           for (n = 0; n < 9; n = n + 1) begin
-            t[0] = 0;
-            t[1] = 0;
-            t[2] = 0;
+            t = 0;
             for (c = 0; c < 9; c = c + 1) begin
-              t[c/3] = t[c/3] + rdata_c[9*c+n];
-              count_col[c][n] <= count_col[c][n] + rdata_c[9*c+n];
+              t = t + rdata_c[9*c+n];
             end
-            count_row[n] <= t[0] + t[1] + t[2];
-            count_box[0][n] <= count_box[0][n] + t[0];
-            count_box[1][n] <= count_box[1][n] + t[1];
-            count_box[2][n] <= count_box[2][n] + t[2];
+            count_row[n] <= t;
           end
 
           wdata_i <= rdata_c; // Stash this as we need the valid values
@@ -309,119 +283,17 @@ always @(posedge clk) begin
           integer c;
 
           we_i <= 0;
-          if ( allow_naked_box && (row_en_i[2] || row_en_i[5] || row_en_i[8]) ) begin
-            integer n;
-            for (n = 0; n < 9; n = n + 1) begin
-              valid_box[0][n] <= count_box[0][n] == 1;
-              valid_box[1][n] <= count_box[1][n] == 1;
-              valid_box[2][n] <= count_box[2][n] == 1;
-            end
-
-            row_en_i <= {2'd0,row_en_i[8],2'd0,row_en_i[5],2'd0,row_en_i[2]};
-            cell_addr_i <= 1;
-            state <= STATE_NAKED_ITER_BOX;
-          end else if ( row_en_i[8] ) begin
-            stuck <= 1;
-            state <= STATE_LSINGLE;
-          end else begin
-            cell_addr_i <= 1;
-            row_en_i <= {row_en_i[7:0],1'b0};
-            state <= STATE_NAKED_ITER_ROW;
-          end
-        end
-        STATE_NAKED_ITER_BOX: begin
-          wdata_i <= rdata_c; // Stash this as we need the valid values
-          cell_addr_i <= 0; // PROC_ROW needs the values
-          state <= STATE_NAKED_PROC_BOX;
-        end
-        STATE_NAKED_PROC_BOX: begin
-          integer c;
-          integer t;
-
-          if ( valid_box[0] || valid_box[1] || valid_box[2] )
-            stuck <= 0;
-          for (c = 0; c < 9; c = c + 1) begin
-            t = wdata_i[9*(c+1)-1 -: 9] & valid_box[c/3];
-            wdata_i[9*(c+1)-1 -: 9] <= t ? t : rdata_c[9*(c+1)-1 -: 9];
-            we_i[c] <= t ? 1 : 0;
-          end
-          state <= STATE_NAKED_SAVE_BOX;
-        end
-        STATE_NAKED_SAVE_BOX: begin
-          we_i <= 0;
-
-          if ( row_en_i[8] && allow_naked_col ) begin
-            integer n;
-            for (n = 0; n < 9; n = n + 1) begin
-              valid_col[0][n] <= count_col[0][n] == 1;
-            end
-
-            row_en_i <= 1;
-            state <= STATE_NAKED_PREP_COL;
-          end else if ( row_en_i[8] ) begin
-            stuck <= 1;
-            state <= STATE_LSINGLE;
-          end else if ( row_en_i[2] || row_en_i[5] ) begin
-            integer n;
-            for (n = 0; n < 9; n = n + 1) begin
-              count_box[0][n] <= 0;
-              count_box[1][n] <= 0;
-              count_box[2][n] <= 0;
-            end
-
-            cell_addr_i <= 1;
-            row_en_i <= {row_en_i[7:0],1'b0};
-            state <= STATE_NAKED_ITER_ROW;
-          end else begin
-            cell_addr_i <= 1;
-            row_en_i <= {row_en_i[7:0],1'b0};
-            state <= STATE_NAKED_ITER_BOX;
-          end
-        end
-        STATE_NAKED_PREP_COL: begin
-          integer n;
-          for (n = 0; n < 9; n = n + 1) begin
-            valid_col[row_en_i][n] <= count_col[row_en_i][n] == 1;
-          end
-          if ( valid_col[row_en_i-1] )
-            stuck <= 0;
-          if ( row_en_i == 8 ) begin
-            row_en_i <= 1;
-            cell_addr_i <= 1;
-            state <= STATE_NAKED_ITER_COL;
-          end else begin
-            row_en_i <= row_en_i+1;
-          end
-        end
-        STATE_NAKED_ITER_COL: begin
-          if ( valid_col[8] )
-            stuck <= 0;
-
-          wdata_i <= rdata_c; // Stash this as we need the valid values
-          cell_addr_i <= 0;
-          state <= STATE_NAKED_PROC_COL;
-        end
-        STATE_NAKED_PROC_COL: begin
-          integer c;
-          integer t;
-
-          for (c = 0; c < 9; c = c + 1) begin
-            t = wdata_i[9*(c+1)-1 -: 9] & valid_col[c];
-            wdata_i[9*(c+1)-1 -: 9] <= t ? t : ~0; // rdata_c[9*(c+1)-1 -: 9];
-            we_i[c] <= t ? 1 : 0;
-          end
-          state <= STATE_NAKED_SAVE_COL;
-        end
-        STATE_NAKED_SAVE_COL: begin
-          we_i <= 0;
-          
           if ( row_en_i[8] ) begin
-            stuck <= 1;
-            state <= STATE_LSINGLE;
+            if ( stuck ) begin
+              state <= STATE_IDLE;
+            end else begin
+              stuck <= 1;
+              state <= STATE_LSINGLE;
+            end
           end else begin
             cell_addr_i <= 1;
             row_en_i <= {row_en_i[7:0],1'b0};
-            state <= STATE_NAKED_ITER_COL;
+            state <= STATE_NAKED_ITER_ROW;
           end
         end
       endcase
