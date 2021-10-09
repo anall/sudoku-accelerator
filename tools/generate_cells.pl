@@ -56,7 +56,7 @@ for (my $row = 0; $row < 9; ++$row) {
       push @{ $boxids[$box] }, $idx;
       print "sudoku_cell cell$row$col( .clk(clk), .reset(reset),\n".
         "  .rdata(rdata_cell[$row][" . (9*($col+1)-1) .":" . 9*$col . "]), .wdata(wdata_c[" . (9*($col+1)-1) .":" . 9*$col . "]),\n".
-        "  .address(cell_addr), .we(row_en_c[$row] & we_c[$col3]),\n". # .oe(row_en_c[$row] & oe_c),\n".
+        "  .address(cell_addr), .we(row_en_c[$row] & we_c[$col]),\n". # .oe(row_en_c[$row] & oe_c),\n".
         "  .latch_singleton(latch_singleton),\n".
         "  .is_singleton(cell_singleton[$idx]), .is_illegal(cell_illegal[$idx]), .solved(cell_solved[$idx]) );\n";
   }

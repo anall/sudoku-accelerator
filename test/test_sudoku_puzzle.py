@@ -57,11 +57,13 @@ async def read_puzzle(dut):
 
     for col in range(9):
       dval = val & 0b111111111
-      cur_number = next(filter(lambda v: val & 1<<v,range(9)),-1)+1
-      if ( cur_number == 0 ):
+      cur_numbers = list(filter(lambda v: val & 1<<v,range(9)))
+      if ( len(cur_numbers) == 0 ):
         puzzle = puzzle + '.'
+      elif ( len(cur_numbers) > 1 ):
+        puzzle = puzzle + 'x'
       else:
-        puzzle = puzzle + str(cur_number)
+        puzzle = puzzle + str(cur_numbers[0]+1)
       val = val >> 9
 
   await ClockCycles(dut.clk, 1)
@@ -104,6 +106,7 @@ async def test_puzzle(dut,o_puzzle,s_puzzle,solvable):
       print("solver somehow solved unsolvable puzzle, puzzle below")
 
     print(f_puzzle)
+    print(s_puzzle + " (expected)")
  
     assert( n < 1000 )
     if ( solvable ):
@@ -119,7 +122,7 @@ async def test_sudoku_puzzle(dut):
     dut.VPWR <= 1
     dut.VGND <= 0
 
-  clock = Clock(dut.clk, 10, units="ns")
+  clock = Clock(dut.clk, 100, units="ns")
   cocotb.fork(clock.start())
 
   z81 =  BinaryValue("z")
@@ -128,6 +131,10 @@ async def test_sudoku_puzzle(dut):
   dut.we <= 0
   dut.start_solve <= 0
   dut.abort <= 0
+
+  dut.allow_naked <= 1
+  dut.allow_naked_box <= 1
+  dut.allow_naked_col <= 1
   await reset(dut)
 
   await test_puzzle(dut,

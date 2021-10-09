@@ -1,23 +1,22 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Fri Oct  8 17:32:14 2021
+[*] Sat Oct  9 00:54:42 2021
 [*]
-[dumpfile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/sudoku_puzzle.vcd"
-[dumpfile_mtime] "Fri Oct  8 17:25:32 2021"
-[dumpfile_size] 1309679
-[savefile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/sudoku_puzzle.gtkw"
-[timestart] 8436
+[dumpfile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/vcd/sudoku_puzzle.vcd"
+[dumpfile_mtime] "Sat Oct  9 00:53:53 2021"
+[dumpfile_size] 977605
+[savefile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/gtkw/sudoku_puzzle.gtkw"
+[timestart] 77320
 [size] 1466 820
 [pos] 168 63
-*-7.000000 8950 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-10.000000 79941 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] sudoku_puzzle.
 [sst_width] 205
 [signals_width] 382
 [sst_expanded] 1
 [sst_vpaned_height] 236
-@29
-sudoku_puzzle.clk
 @28
+sudoku_puzzle.clk
 sudoku_puzzle.reset
 sudoku_puzzle.start_solve
 sudoku_puzzle.abort
@@ -38,7 +37,7 @@ sudoku_puzzle.we[2:0]
 @1401200
 -group_end
 @28
-sudoku_puzzle.we_c[2:0]
+sudoku_puzzle.we_i[8:0]
 @22
 sudoku_puzzle.rdata[80:0]
 sudoku_puzzle.rdata_c[80:0]
@@ -60,9 +59,32 @@ sudoku_puzzle.cell_illegal[80:0]
 sudoku_puzzle.is_illegal
 sudoku_puzzle.we[2:0]
 sudoku_puzzle.latch_singleton
-@22
+@24
 sudoku_puzzle.state[3:0]
+@22
+sudoku_puzzle.cell83.value[9:1]
+@28
+sudoku_puzzle.cell83.valid[9:1]
+@22
+sudoku_puzzle.count_box01[6:0]
+sudoku_puzzle.cell85.value[9:1]
 @28
 sudoku_puzzle.valid_row[8:0]
+@22
+sudoku_puzzle.valid_box0[8:0]
+@23
+sudoku_puzzle.valid_box1[8:0]
+@22
+sudoku_puzzle.valid_box2[8:0]
+@28
+sudoku_puzzle.valid_col0[8:0]
+sudoku_puzzle.valid_col1[8:0]
+sudoku_puzzle.valid_col2[8:0]
+sudoku_puzzle.valid_col3[8:0]
+sudoku_puzzle.valid_col4[8:0]
+sudoku_puzzle.valid_col5[8:0]
+sudoku_puzzle.valid_col6[8:0]
+sudoku_puzzle.valid_col7[8:0]
+sudoku_puzzle.valid_col8[8:0]
 [pattern_trace] 1
 [pattern_trace] 0
