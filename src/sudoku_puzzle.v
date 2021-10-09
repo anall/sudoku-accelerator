@@ -66,15 +66,6 @@ localparam STATE_ELIM_SAVE_COL    =  5;
 localparam STATE_NAKED_ITER_ROW   =  6;
 localparam STATE_NAKED_PROC_ROW   =  7;
 localparam STATE_NAKED_SAVE_ROW   =  8;
-
-localparam STATE_NAKED_ITER_BOX   =  9;
-localparam STATE_NAKED_PROC_BOX   = 10;
-localparam STATE_NAKED_SAVE_BOX   = 11;
-
-localparam STATE_NAKED_PREP_COL   = 12;
-localparam STATE_NAKED_ITER_COL   = 13;
-localparam STATE_NAKED_PROC_COL   = 14;
-localparam STATE_NAKED_SAVE_COL   = 15;
 reg [3:0] state = STATE_IDLE;
 
 assign busy = state != STATE_IDLE;
