@@ -23,32 +23,48 @@ import random
 from os import environ
 
 async def reset(dut):
-  dut.reset <= 1
+  dut.wb_rst_i <= 1
 
-  await ClockCycles(dut.clk, 5)
-  dut.reset <= 0;
+  await ClockCycles(dut.wb_clk_i, 5)
+  dut.wb_rst_i <= 0;
 
 def load_puzzle(wbm,pid,puzzle):
+  base_address = 0x3000_1000 | (pid<<10) | (1<<9);
+
   assert(len(puzzle) == 81)
 
   values = list(map(lambda x: 0 if x == '.' else int(x),puzzle))
-  base_address = 0x3000_1000 | pid<<10 | 1<<9;
   operations = []
   for row in range(9):
     for sub in range(3):
       val = values[row*9+sub*3] | values[row*9+sub*3+1] << 8 | values[row*9+sub*3+2] << 16;
 
-      operations.append(WBOp(base_address | row<<4 | sub << 2,val,0,0b1111));
+      operations.append(WBOp(base_address | row<<4 | sub<<2,val,0,0b1111));
   
   return wbm.send_cycle(operations)
 
-def read_puzzle(wbm,pid):
-  base_address = 0x3000_1000 | pid<<10 | 1<<9;
+def puzzle_cell(n):
+  if ( n == 0 ):
+    return '.'
+  else:
+    return chr(n + ord('0'))
+  
+async def read_puzzle(wbm,pid):
+  base_address = 0x3000_1000 | (pid<<10) | (1<<9);
   operations = []
   for row in range(9):
     for sub in range(3):
-      operations.append(WBOp(base_address | row<<4 | sub << 2,None,0,0b1111));
-  return wbm.send_cycle(operations)
+      operations.append(WBOp(base_address | row<<4 | sub<<2,None,0,0b1111));
+  values = await wbm.send_cycle(operations)
+
+  puzzle = ''
+  for v in values:
+    dat = v.datrd;
+
+    puzzle = puzzle + puzzle_cell( dat&0xF ) + puzzle_cell( (dat&0xF00)>>8 ) + puzzle_cell( (dat&0xF0000)>>16 )
+
+  return puzzle
+  
 
 @cocotb.test()
 async def test_sudoku_puzzle(dut):
@@ -57,10 +73,10 @@ async def test_sudoku_puzzle(dut):
     dut.VPWR <= 1
     dut.VGND <= 0
 
-  clock = Clock(dut.clk, 100, units="ns")
+  clock = Clock(dut.wb_clk_i, 100, units="ns")
   cocotb.fork(clock.start())
 
-  wbm = WishboneMaster(dut, "wb", dut.clk,
+  wbm = WishboneMaster(dut, "wb", dut.wb_clk_i,
     width=32,   # size of data bus
     timeout=10, # in clock cycle number
     signals_dict={
@@ -81,17 +97,29 @@ async def test_sudoku_puzzle(dut):
     WBOp(0x3000_1000 | 0<<10 | 1<<9 | 0<<4 | 0<<2,5,0,0b1),
   ]);
   o_puzzle = await read_puzzle(wbm,0)
+  print(o_puzzle)
   
-  await wbm.send_cycle([WBOp(0x3000_0000,1)]);
+  await wbm.send_cycle([WBOp(0x3000_0000,1<<17,0,0b1111)]);
 
-  i_puzzle = "4...2.....35.....778.39...45.4......6.2.8.7.3......5.91...48.353.....28.....3...6";
-  await load_puzzle(wbm,1,i_puzzle)
-  
-  await wbm.send_cycle([WBOp(0x3000_0000,1<<8)]);
+#  while ( (await wbm.send_cycle([WBOp(0x3000_0000,None,0,0b1111)]))[0].datrd & 1<<17 == 1<<17 ):
+#    pass
 
-  while ( (await wbm.send_cycle([WBOp(0x3000_0000,None,0,0b1111)]))[0].datrd & 1 == 1 ):
-    pass
-  s_puzzle1 = await read_puzzle(wbm,0)
-  while ( (await wbm.send_cycle([WBOp(0x3000_0000,None,0,0b1111)]))[0].datrd & 1<<8 == 1<<8 ):
-    pass
-  s_puzzle2 = await read_puzzle(wbm,1)
+  c_puzzle = await read_puzzle(wbm,0)
+  print(c_puzzle)
+
+#  i_puzzle = "4...2.....35.....778.39...45.4......6.2.8.7.3......5.91...48.353.....28.....3...6";
+#  await load_puzzle(wbm,1,i_puzzle)
+#  
+#  await wbm.send_cycle([WBOp(0x3000_0000,1<<8)]);
+#
+#  while ( (await wbm.send_cycle([WBOp(0x3000_0000,None,0,0b1111)]))[0].datrd & 1 == 1 ):
+#    pass
+#
+#  s_puzzle1 = await read_puzzle(wbm,0)
+#  print(s_puzzle1)
+#
+#  while ( (await wbm.send_cycle([WBOp(0x3000_0000,None,0,0b1111)]))[0].datrd & 1<<8 == 1<<8 ):
+#    pass
+#
+#  s_puzzle2 = await read_puzzle(wbm,1)
+#  print(s_puzzle2)
