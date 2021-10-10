@@ -24,14 +24,14 @@ module sudoku_puzzle (
   // 098765432109876543210987654321098765432109876543210987654321098765432109876543210
   // 123456789123456789123456789123456789123456789123456789123456789123456789123456789
   // 1        2        3        4        5        6        7        8        9
-  input wire [80:0] wdata,
-  output wire [80:0] rdata,
+  input wire [26:0] wdata,
+  output wire [26:0] rdata,
 
   // taaaa - 1 bit for type, 4 for address
   input wire [4:0] address,
 
-  // low/med/high oe/we
-  input wire [2:0] we,
+  input wire [2:0] sel,
+  input wire we,
 
   input wire start_solve,
   input wire abort,
@@ -98,8 +98,13 @@ wire [80:0] rdata_c =
   row_en_c[7] ? rdata_cell[7] :
   row_en_c[8] ? rdata_cell[8] : 0;
 
-assign rdata = busy ? ~0 : rdata_c;
-wire [80:0] wdata_c = busy ? wdata_i : wdata;
+assign rdata = busy ? ~0 : (
+  sel == 3'b001 ? rdata_c[26:0] :
+  sel == 3'b010 ? rdata_c[53:27] :
+  sel == 3'b100 ? rdata_c[80:54] :
+    ~0
+);
+wire [80:0] wdata_c = busy ? wdata_i : {wdata,wdata,wdata};
 
 // internal versions of we, oe, and row_en, and data
 reg we_i;
@@ -107,7 +112,7 @@ reg [8:0] row_en_i;
 reg [80:0] wdata_i;
 
 // we, oe and row_en for cells (which will either be external or internal depending on busy state)
-wire [2:0] we_c = busy ? {we_i,we_i,we_i} : we;
+wire [2:0] we_c = busy ? {we_i,we_i,we_i} : sel & {we,we,we};
 wire [8:0] row_en_c = busy ? row_en_i : row_en_decode;
 
 wire is_singleton;

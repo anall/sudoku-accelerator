@@ -34,15 +34,15 @@ module sudoku_puzzle_wb #(
   output interrupt
 );
 
-wire [80:0] pzl_rdata_0;
-wire [80:0] pzl_rdata_1;
+wire [26:0] pzl_rdata_0;
+wire [26:0] pzl_rdata_1;
 
 wire [3:0] pzl_adr_cell = wb_adr_i[7:4];
 wire       pzl_adr_type  = wb_adr_i[8];
 wire       pzl_adr_xform = wb_adr_i[9];
 wire       pzl_id = wb_adr_i[10];
 
-wire [80:0] pzl_rdata =
+wire [26:0] pzl_rdata =
   pzl_id ? pzl_rdata_1 : pzl_rdata_0;
 
 wire wb_valid = wb_stb_i & wb_cyc_i;
@@ -55,18 +55,13 @@ wire addr_sel   = wb_valid & (wb_adr_i & 32'h FFFF_0000) == BASE_ADR & wb_adr_i[
 
 wire puzzles_sel = addr_sel & wb_adr_i[15:12] == 1;
 
-wire [2:0] pzl_addr_third = (
+wire [2:0] pzl_addr_third = pzl_copy ? pzl_copy_third : (
   wb_adr_i[3:2] == 0 ? 3'b001 :
   wb_adr_i[3:2] == 1 ? 3'b010 :
   wb_adr_i[3:2] == 2 ? 3'b100 :
       0 );
 
-wire [26:0] pzl_dat_o = (
-  wb_adr_i[3:2] == 0 ? pzl_rdata[26:0] :
-  wb_adr_i[3:2] == 1 ? pzl_rdata[53:27] :
-  wb_adr_i[3:2] == 2 ? pzl_rdata[80:54] :
-      0 );
-
+wire [26:0] pzl_dat_o = pzl_rdata;
 
 wire wb_sel_full = wb_sel_i == 4'b1111;
 
@@ -89,14 +84,14 @@ spw_xlate xfx0(.value(pzl_dat_o[8:0]), .result(xform_dat_fxl[0]), .pop(pzl_adr_t
 spw_xlate xfx1(.value(pzl_dat_o[17:9]), .result(xform_dat_fxl[1]), .pop(pzl_adr_type));
 spw_xlate xfx2(.value(pzl_dat_o[26:18]), .result(xform_dat_fxl[2]), .pop(pzl_adr_type));
 
-wire addr_ctrl_status = addr_sel & wb_adr_i[15:4] == 'h0;
-wire addr_ctrl_naked  = addr_sel & wb_adr_i[15:4] == 'h4;
-wire addr_ctrl_ie     = addr_sel & wb_adr_i[15:4] == 'h8;
+wire addr_ctrl_status = addr_sel & wb_adr_i[15:0] == 'h0;
+wire addr_ctrl_naked  = addr_sel & wb_adr_i[15:0] == 'h4;
+wire addr_ctrl_ie     = addr_sel & wb_adr_i[15:0] == 'h8;
 
 assign wb_dat_o =
   (puzzles_sel ?
-    (pzl_adr_xform ? (
-      {8'd0,4'd0,xform_dat_fxl[2],4'd0,xform_dat_fxl[1],4'd0,xform_dat_fxl[0]} ) // we're reading the values, we want from one hot (or popcnt)
+    (pzl_adr_xform ? ( // we're reading the converted values, we want values to be converted from one hot, and valid to be popcnt
+      {8'd0,4'd0,xform_dat_fxl[2],4'd0,xform_dat_fxl[1],4'd0,xform_dat_fxl[0]} )
     : pzl_dat_o) :
    addr_ctrl_status ? {
       8'd0,
@@ -109,19 +104,19 @@ assign wb_dat_o =
       ~0);
 
 reg pzl_special_handled;
-reg [80:0] pzl_wdata_i;
-wire [80:0] pzl_wdata =
+reg [26:0] pzl_wdata_i;
+wire [26:0] pzl_wdata =
   pzl_copy ? (pzl_copy_to_a ? pzl_rdata_1 : pzl_rdata_0) :
   pzl_special_handled ? pzl_wdata_i :
   pzl_adr_xform ?
-      {xform_dat_t1h[2],xform_dat_t1h[1],xform_dat_t1h[0],xform_dat_t1h[2],xform_dat_t1h[1],xform_dat_t1h[0],xform_dat_t1h[2],xform_dat_t1h[1],xform_dat_t1h[0]}
-    : {wb_dat_i[26:0], wb_dat_i[26:0], wb_dat_i[26:0]};
+      {xform_dat_t1h[2],xform_dat_t1h[1],xform_dat_t1h[0]}
+    : wb_dat_i[26:0];
 
 wire [4:0] pzl_addr = pzl_copy ? {pzl_copy_type,pzl_copy_cell} : {pzl_adr_type,pzl_adr_cell};
 
-wire [2:0] pzl_we = pzl_addr_third & {3{puzzles_sel &
+wire pzl_we = puzzles_sel &
   pzl_adr_xform ? ( wb_we_i & (wb_sel_full | pzl_special_handled) )
-    : (wb_we_i & wb_sel_full)}};
+    : (wb_we_i & wb_sel_full);
 
 reg [1:0] pzl_start;
 reg [1:0] pzl_abort;
@@ -137,6 +132,7 @@ reg pzl_ie_copy;
 
 reg pzl_copy_type;
 reg [3:0] pzl_copy_cell;
+reg [2:0] pzl_copy_third;
 
 always @(posedge wb_clk_i) begin
   if ( wb_rst_i ) begin
@@ -148,6 +144,7 @@ always @(posedge wb_clk_i) begin
 
     pzl_copy_type <= 0;
     pzl_copy_cell <= 0;
+    pzl_copy_third <= 1;
     pzl_ie_solved <= 0;
     pzl_ie_copy <= 0;
   end else if ( wb_we_i && addr_ctrl_ie && wb_ack_o && wb_sel_i[0] ) begin
@@ -188,15 +185,19 @@ always @(posedge wb_clk_i) begin
   end
 
   if ( pzl_copy ) begin
-    if ( pzl_copy_cell == 8 ) begin
+    if ( pzl_copy_third == 3'b100 & pzl_copy_cell == 8 ) begin
       if ( pzl_copy_type ) begin
         pzl_copy <= 0; // and we're done
       end else begin
         pzl_copy_cell <= 0;
+        pzl_copy_third <= 1;
         pzl_copy_type <= 1;
       end
-    end else begin
+    end else if ( pzl_copy_third == 3'b100 ) begin
+      pzl_copy_third <= 1;
       pzl_copy_cell <= pzl_copy_cell + 1;
+    end else begin
+      pzl_copy_third = {pzl_copy_third[1:0],1'b0};
     end
   end
 end
@@ -238,18 +239,18 @@ always @(posedge wb_clk_i) begin
   end
 end
 
-wire [2:0] pzl_we_0 =
-  pzl_copy ? {3{pzl_copy_to_a}} :
-    ( pzl_we & {3{pzl_sel[0] & wb_we_i & (wb_sel_full|pzl_special_handled)}} );
+wire pzl_we_0 =
+  pzl_copy ? pzl_copy_to_a :
+    ( pzl_we & pzl_sel[0] & wb_we_i & (wb_sel_full|pzl_special_handled) );
 
-wire [2:0] pzl_we_1 =
-  pzl_copy ? {3{~pzl_copy_to_a}} :
-    ( pzl_we & {3{pzl_sel[1] & wb_we_i & (wb_sel_full|pzl_special_handled)}} );
+wire pzl_we_1 =
+  pzl_copy ? ~pzl_copy_to_a :
+    ( pzl_we & pzl_sel[1] & wb_we_i & (wb_sel_full|pzl_special_handled) );
 
 sudoku_puzzle puzzle0 (
   .clk(wb_clk_i), .reset(wb_rst_i),
   .wdata(pzl_wdata), .rdata(pzl_rdata_0),
-  .address(pzl_addr), .we(pzl_we_0),
+  .address(pzl_addr), .we(pzl_we_0), .sel(pzl_addr_third),
 
   .start_solve(pzl_start[0]),
   .abort(pzl_abort[0]),
@@ -264,7 +265,7 @@ sudoku_puzzle puzzle0 (
 sudoku_puzzle puzzle1 (
   .clk(wb_clk_i), .reset(wb_rst_i),
   .wdata(pzl_wdata), .rdata(pzl_rdata_1),
-  .address(pzl_addr), .we(pzl_we_1),
+  .address(pzl_addr), .we(pzl_we_1), .sel(pzl_addr_third),
 
   .start_solve(pzl_start[1]),
   .abort(pzl_abort[1]),

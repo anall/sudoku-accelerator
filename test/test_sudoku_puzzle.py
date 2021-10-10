@@ -33,14 +33,18 @@ async def load_puzzle(dut,puzzle):
   values = list(map(lambda x: 0 if x == '.' else int(x),puzzle))
   dut.we <= 0b111
   for row in range(9):
-    val = 0
-    for col in range(9):
-      idx = row*9+col
-      if ( values[idx] > 0 ):
-        val = val | 1<<(values[idx]-1)<<(9*col)
     dut.address <= row
-    dut.wdata <= val
-    await ClockCycles(dut.clk, 1)
+    phase_sel = 1
+    for phase in range(3):
+      val = 0
+      for col in range(3):
+        idx = row*9+phase*3+col
+        if ( values[idx] > 0 ):
+          val = val | 1<<(values[idx]-1)<<(9*col)
+      dut.sel <= phase_sel
+      dut.wdata <= val
+      phase_sel = phase_sel << 1
+      await ClockCycles(dut.clk, 1)
 
   dut.we <= 0
   await ClockCycles(dut.clk, 1)
@@ -50,21 +54,26 @@ async def read_puzzle(dut):
 
   assert(dut.busy == 0)
   for row in range(9):
+    dut.we <= 0 # make sure this is off
     dut.address <= row
-    await ClockCycles(dut.clk, 1)
+    phase_sel = 1
+    for phase in range(3):
+      dut.sel <= phase_sel
+      phase_sel = phase_sel << 1
+      await ClockCycles(dut.clk, 1)
 
-    val = dut.rdata.value.integer
+      val = dut.rdata.value.integer
 
-    for col in range(9):
-      dval = val & 0b111111111
-      cur_numbers = list(filter(lambda v: val & 1<<v,range(9)))
-      if ( len(cur_numbers) == 0 ):
-        puzzle = puzzle + '.'
-      elif ( len(cur_numbers) > 1 ):
-        puzzle = puzzle + 'x'
-      else:
-        puzzle = puzzle + str(cur_numbers[0]+1)
-      val = val >> 9
+      for col in range(3):
+        dval = val & 0b111111111
+        cur_numbers = list(filter(lambda v: val & 1<<v,range(9)))
+        if ( len(cur_numbers) == 0 ):
+          puzzle = puzzle + '.'
+        elif ( len(cur_numbers) > 1 ):
+          puzzle = puzzle + 'x'
+        else:
+          puzzle = puzzle + str(cur_numbers[0]+1)
+        val = val >> 9
 
   await ClockCycles(dut.clk, 1)
 
@@ -129,6 +138,7 @@ async def test_sudoku_puzzle(dut):
   z81 =  BinaryValue("z")
   dut.wdata <= 0
   dut.address <= 0
+  dut.sel <= 0
   dut.we <= 0
   dut.start_solve <= 0
   dut.abort <= 0

@@ -96,21 +96,37 @@ async def test_sudoku_puzzle(dut):
   await wbm.send_cycle([
     WBOp(0x3000_1000 | 0<<10 | 1<<9 | 0<<4 | 0<<2,5,0,0b1),
   ]);
+  v_puzzle = "5.1.6..24.6.4...73.7....1.5.....72.88.239.5473..284.9...56..4...2....31.946..17..";
   o_puzzle = await read_puzzle(wbm,0)
+  print(v_puzzle)
   print(o_puzzle)
+
+  assert(o_puzzle == v_puzzle)
   
   await wbm.send_cycle([WBOp(0x3000_0000,1<<17,0,0b1111)]);
 
 #  while ( (await wbm.send_cycle([WBOp(0x3000_0000,None,0,0b1111)]))[0].datrd & 1<<17 == 1<<17 ):
 #    pass
 
-  c_puzzle = await read_puzzle(wbm,0)
+  c_puzzle = await read_puzzle(wbm,1)
   print(c_puzzle)
+
+  assert(c_puzzle == v_puzzle)
+
+  await wbm.send_cycle([WBOp(0x3000_0000,1<<8|1)]);
+  await wbm.send_cycle([WBOp(0x3000_0008,0b11)]);
+
+  while ( dut.interrupt == 0 ):
+    await ClockCycles(dut.wb_clk_i, 1)
+
+  s_puzzle0 = await read_puzzle(wbm,0)
+  s_puzzle1 = await read_puzzle(wbm,1)
+  print(s_puzzle0)
+  print(s_puzzle1)
 
 #  i_puzzle = "4...2.....35.....778.39...45.4......6.2.8.7.3......5.91...48.353.....28.....3...6";
 #  await load_puzzle(wbm,1,i_puzzle)
 #  
-#  await wbm.send_cycle([WBOp(0x3000_0000,1<<8)]);
 #
 #  while ( (await wbm.send_cycle([WBOp(0x3000_0000,None,0,0b1111)]))[0].datrd & 1 == 1 ):
 #    pass

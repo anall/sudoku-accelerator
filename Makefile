@@ -1,6 +1,6 @@
 export COCOTB_REDUCED_LOG_FMT=1
 
-all: test_sudoku_puzzle test_sudoku_cell test_simpleuart test_simpleuart_wb
+all: test_sudoku_puzzle test_sudoku_cell test_simpleuart test_simpleuart_wb test_sudoku_puzzle_wb
 
 test_sudoku_puzzle:
 	rm -rf sim_build/
