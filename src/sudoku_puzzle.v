@@ -41,7 +41,7 @@ module sudoku_puzzle (
   output reg stuck,
   output reg illegal,
 
-  // switches to disable the naked stuff, in case there are bugs
+  // switches to disable the naked strategies, in case there are bugs
   input wire allow_naked
 );
 
@@ -64,8 +64,9 @@ localparam STATE_ELIM_SAVE_BOX    =  4;
 localparam STATE_ELIM_SAVE_COL    =  5;
 
 localparam STATE_NAKED_ITER_ROW   =  6;
-localparam STATE_NAKED_PROC_ROW   =  7;
-localparam STATE_NAKED_SAVE_ROW   =  8;
+localparam STATE_NAKED_PROC1_ROW  =  7;
+localparam STATE_NAKED_PROC2_ROW  =  8;
+localparam STATE_NAKED_SAVE_ROW   =  9;
 reg [3:0] state = STATE_IDLE;
 
 assign busy = state != STATE_IDLE;
@@ -113,6 +114,9 @@ wire is_singleton;
 wire is_illegal;
 reg naked_done;
 
+reg clear_box;
+reg [3:0] phase_ct;
+
 wire cell_addr = busy ? cell_addr_i : address[4];
 
 always @(posedge clk) begin
@@ -125,7 +129,7 @@ always @(posedge clk) begin
     we_i <= 0;
     cell_addr_i <= 0;
     naked_done <= 0;
-
+    clear_box <= 0;
     wdata_i <= 0;
     row_en_i <= 0;
   end else if ( busy ) begin // busy means 'not STATE_IDLE'
@@ -135,6 +139,7 @@ always @(posedge clk) begin
       stuck <= (is_illegal ? 1 : abort);
       illegal <= is_illegal;
       state <= STATE_IDLE;
+      phase_ct <= 0;
     end else begin
       case ( state )
         STATE_LSINGLE : begin
@@ -146,13 +151,7 @@ always @(posedge clk) begin
             row_en_i <= 1;
             cell_addr_i <= 0;
 
-            for (c = 0; c < 9; c = c + 1) begin
-              valid_col[c] <= 9'b111111111;
-            end
-
-            for (c = 0; c < 3; c = c + 1) begin
-              valid_box[c] <= 9'b111111111;
-            end
+            clear_box <= 1;
 
             state <= STATE_ELIM_ITER_ROW;
           end else begin
@@ -161,6 +160,7 @@ always @(posedge clk) begin
               row_en_i <= 1;
               latch_singleton <= 0;
               cell_addr_i <= 1;
+              phase_ct <= 0;
               state <= STATE_NAKED_ITER_ROW;
             end else begin
               stuck <= 1;
@@ -169,7 +169,7 @@ always @(posedge clk) begin
           end
         end
         STATE_ELIM_ITER_ROW : begin
-          integer c;
+          /*integer c;
           integer box[3];
 
           valid_row = 9'b111111111;
@@ -181,7 +181,33 @@ always @(posedge clk) begin
 
           for (c = 0; c < 9; c = c + 1) begin
             wdata_i[9*(c+1)-1 -: 9] <= valid_row;
-          end
+          end*/
+
+          clear_box <= 0;
+
+          // Following generated using tools/generate_eir.pl
+          valid_col[0] <= (row_en_i==1?9'b111111111:valid_col[0]) & ~rdata_c[8 -: 9];
+          valid_col[1] <= (row_en_i==1?9'b111111111:valid_col[1]) & ~rdata_c[17 -: 9];
+          valid_col[2] <= (row_en_i==1?9'b111111111:valid_col[2]) & ~rdata_c[26 -: 9];
+          valid_box[0] <= (clear_box?9'b111111111:valid_box[0]) & ~rdata_c[8 -: 9]&~rdata_c[17 -: 9]&~rdata_c[26 -: 9];
+          valid_col[3] <= (row_en_i==1?9'b111111111:valid_col[3]) & ~rdata_c[35 -: 9];
+          valid_col[4] <= (row_en_i==1?9'b111111111:valid_col[4]) & ~rdata_c[44 -: 9];
+          valid_col[5] <= (row_en_i==1?9'b111111111:valid_col[5]) & ~rdata_c[53 -: 9];
+          valid_box[1] <= (clear_box?9'b111111111:valid_box[1]) & ~rdata_c[35 -: 9]&~rdata_c[44 -: 9]&~rdata_c[53 -: 9];
+          valid_col[6] <= (row_en_i==1?9'b111111111:valid_col[6]) & ~rdata_c[62 -: 9];
+          valid_col[7] <= (row_en_i==1?9'b111111111:valid_col[7]) & ~rdata_c[71 -: 9];
+          valid_col[8] <= (row_en_i==1?9'b111111111:valid_col[8]) & ~rdata_c[80 -: 9];
+          valid_box[2] <= (clear_box?9'b111111111:valid_box[2]) &  ~rdata_c[62 -: 9]&~rdata_c[71 -: 9]&~rdata_c[80 -: 9];
+          wdata_i[8 -: 9] <= ~rdata_c[8 -: 9]&~rdata_c[17 -: 9]&~rdata_c[26 -: 9]&~rdata_c[35 -: 9]&~rdata_c[44 -: 9]&~rdata_c[53 -: 9]&~rdata_c[62 -: 9]&~rdata_c[71 -: 9]&~rdata_c[80 -: 9];
+          wdata_i[17 -: 9] <= ~rdata_c[8 -: 9]&~rdata_c[17 -: 9]&~rdata_c[26 -: 9]&~rdata_c[35 -: 9]&~rdata_c[44 -: 9]&~rdata_c[53 -: 9]&~rdata_c[62 -: 9]&~rdata_c[71 -: 9]&~rdata_c[80 -: 9];
+          wdata_i[26 -: 9] <= ~rdata_c[8 -: 9]&~rdata_c[17 -: 9]&~rdata_c[26 -: 9]&~rdata_c[35 -: 9]&~rdata_c[44 -: 9]&~rdata_c[53 -: 9]&~rdata_c[62 -: 9]&~rdata_c[71 -: 9]&~rdata_c[80 -: 9];
+          wdata_i[35 -: 9] <= ~rdata_c[8 -: 9]&~rdata_c[17 -: 9]&~rdata_c[26 -: 9]&~rdata_c[35 -: 9]&~rdata_c[44 -: 9]&~rdata_c[53 -: 9]&~rdata_c[62 -: 9]&~rdata_c[71 -: 9]&~rdata_c[80 -: 9];
+          wdata_i[44 -: 9] <= ~rdata_c[8 -: 9]&~rdata_c[17 -: 9]&~rdata_c[26 -: 9]&~rdata_c[35 -: 9]&~rdata_c[44 -: 9]&~rdata_c[53 -: 9]&~rdata_c[62 -: 9]&~rdata_c[71 -: 9]&~rdata_c[80 -: 9];
+          wdata_i[53 -: 9] <= ~rdata_c[8 -: 9]&~rdata_c[17 -: 9]&~rdata_c[26 -: 9]&~rdata_c[35 -: 9]&~rdata_c[44 -: 9]&~rdata_c[53 -: 9]&~rdata_c[62 -: 9]&~rdata_c[71 -: 9]&~rdata_c[80 -: 9];
+          wdata_i[62 -: 9] <= ~rdata_c[8 -: 9]&~rdata_c[17 -: 9]&~rdata_c[26 -: 9]&~rdata_c[35 -: 9]&~rdata_c[44 -: 9]&~rdata_c[53 -: 9]&~rdata_c[62 -: 9]&~rdata_c[71 -: 9]&~rdata_c[80 -: 9];
+          wdata_i[71 -: 9] <= ~rdata_c[8 -: 9]&~rdata_c[17 -: 9]&~rdata_c[26 -: 9]&~rdata_c[35 -: 9]&~rdata_c[44 -: 9]&~rdata_c[53 -: 9]&~rdata_c[62 -: 9]&~rdata_c[71 -: 9]&~rdata_c[80 -: 9];
+          wdata_i[80 -: 9] <= ~rdata_c[8 -: 9]&~rdata_c[17 -: 9]&~rdata_c[26 -: 9]&~rdata_c[35 -: 9]&~rdata_c[44 -: 9]&~rdata_c[53 -: 9]&~rdata_c[62 -: 9]&~rdata_c[71 -: 9]&~rdata_c[80 -: 9];
+          // END generated block
 
           we_i <= 1;
           cell_addr_i <= 1;
@@ -192,8 +218,17 @@ always @(posedge clk) begin
           for (c = 0; c < 9; c = c + 1) begin
             wdata_i[9*(c+1)-1 -: 9] <= valid_box[c/3];
           end
-          if ( row_en_i[2] || row_en_i[5] || row_en_i[8] ) begin
-            row_en_i <= {row_en_i[8],row_en_i[8],row_en_i[8],row_en_i[5],row_en_i[5],row_en_i[5],row_en_i[2],row_en_i[2],row_en_i[2]};
+          // NOTE: trying to be smart here seems to make the harden process worse
+          //if ( row_en_i[2] || row_en_i[5] || row_en_i[8] ) begin
+          //  row_en_i <= {row_en_i[8],row_en_i[8],row_en_i[8],row_en_i[5],row_en_i[5],row_en_i[5],row_en_i[2],row_en_i[2],row_en_i[2]};
+          if ( row_en_i[2] ) begin
+            row_en_i <= 9'b111;
+            state <= STATE_ELIM_SAVE_BOX;
+          end else if ( row_en_i[5] ) begin
+            row_en_i <= 9'b111000;
+            state <= STATE_ELIM_SAVE_BOX;
+          end else if ( row_en_i[8] ) begin
+            row_en_i <= 9'b111000000;
             state <= STATE_ELIM_SAVE_BOX;
           end else begin
             we_i <= 0;
@@ -213,11 +248,12 @@ always @(posedge clk) begin
           end else begin
             we_i <= 0;
             cell_addr_i <= 0;
-            row_en_i <= {2'b0,row_en_i[5],2'b0,row_en_i[2],3'b0}; // --x--y---
 
-            for (c = 0; c < 3; c = c + 1) begin
-              valid_box[c] <= 9'b111111111;
-            end
+            // NOTE: I think trying to be smart here is worse as well
+            //row_en_i <= {2'b0,row_en_i[5],2'b0,row_en_i[2],3'b0}; // --x--y---
+            row_en_i <= (row_en_i==9'b111 ? 9'b1000 : 9'b1000000);
+
+            clear_box <= 1;
 
             state <= STATE_ELIM_ITER_ROW;
           end
@@ -231,28 +267,32 @@ always @(posedge clk) begin
         end
         STATE_NAKED_ITER_ROW : begin
           integer c;
-          integer n;
           integer t;
 
-          for (n = 0; n < 9; n = n + 1) begin
-            t = 0;
-            for (c = 0; c < 9; c = c + 1) begin
-              t = t + rdata_c[9*c+n];
-            end
-            count_row[n] <= t;
+          t = 0;
+          for (c = 0; c < 9; c = c + 1) begin
+            t = t + rdata_c[9*c+phase_ct];
           end
+          count_row[phase_ct] <= t;
 
-          wdata_i <= rdata_c; // Stash this as we need the valid values
-          cell_addr_i <= 0; // PROC_ROW needs the values
-          state <= STATE_NAKED_PROC_ROW;
+          if ( phase_ct == 8 ) begin
+            wdata_i <= rdata_c; // Stash this as we need the valid values
+            cell_addr_i <= 0; // PROC_ROW needs the values
+            state <= STATE_NAKED_PROC1_ROW;
+          end else begin
+            phase_ct <= phase_ct + 1;
+          end
         end
-        STATE_NAKED_PROC_ROW : begin
+        STATE_NAKED_PROC1_ROW : begin
+          integer c;
+          for (c = 0; c < 9; c = c + 1) begin
+            valid_row[c] <= count_row[c] == 1;
+          end
+          state <= STATE_NAKED_PROC2_ROW;
+        end
+        STATE_NAKED_PROC2_ROW : begin
           integer c;
           integer t;
-          for (c = 0; c < 9; c = c + 1) begin
-            valid_row[c] = count_row[c] == 1;
-          end
-
           if ( valid_row )
             stuck <= 0;
           we_i <= 1;
@@ -267,14 +307,15 @@ always @(posedge clk) begin
 
           we_i <= 0;
           if ( row_en_i[8] ) begin
-            stuck <= 1;
-            if ( stuck ) begin
+            if ( stuck ) begin // using old value
               naked_done <= 1;
             end
+            stuck <= 1; // need to pulse this to force LSINGLE to run the eliminate pass
             state <= STATE_LSINGLE;
           end else begin
             cell_addr_i <= 1;
             row_en_i <= {row_en_i[7:0],1'b0};
+            phase_ct <= 0;
             state <= STATE_NAKED_ITER_ROW;
           end
         end

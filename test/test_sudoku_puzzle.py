@@ -70,7 +70,7 @@ async def read_puzzle(dut):
 
   return puzzle
 
-async def test_puzzle(dut,o_puzzle,s_puzzle,solvable):
+async def test_puzzle(dut,o_puzzle,s_puzzle,solvable, cycle_limit = 1000):
   await load_puzzle(dut,o_puzzle)
 
   print(o_puzzle)
@@ -82,7 +82,7 @@ async def test_puzzle(dut,o_puzzle,s_puzzle,solvable):
 
   n = 0
   await ClockCycles(dut.clk, 1)
-  while ( dut.busy == 1 and n < 1000 ):
+  while ( dut.busy == 1 and n < cycle_limit ):
     n = n + 1;
     await ClockCycles(dut.clk, 1)
 
@@ -98,7 +98,7 @@ async def test_puzzle(dut,o_puzzle,s_puzzle,solvable):
   else:
     f_puzzle = await read_puzzle(dut)
 
-    if ( n >= 1000 ):
+    if ( n >= cycle_limit ):
       print("solver possibly locked up (hit max iteration limit), puzzle progress below")
     if ( dut.stuck == 1 and solvable ):
       print("solver exited stuck (failed to progress puzzle), puzzle progress below")
@@ -106,9 +106,10 @@ async def test_puzzle(dut,o_puzzle,s_puzzle,solvable):
       print("solver somehow solved unsolvable puzzle, puzzle below")
 
     print(f_puzzle)
-    print(s_puzzle + " (expected)")
+    if ( s_puzzle != f_puzzle ):
+      print(s_puzzle + " (expected)")
  
-    assert( n < 1000 )
+    assert( n < cycle_limit )
     if ( solvable ):
       assert( dut.solved == 1 and dut.stuck == 0 )
     else:
@@ -119,8 +120,8 @@ async def test_puzzle(dut,o_puzzle,s_puzzle,solvable):
 async def test_sudoku_puzzle(dut):
   clock = None
   if environ.get("GATELEVEL"):
-    dut.VPWR <= 1
-    dut.VGND <= 0
+    dut.vccd1 <= 1
+    dut.vssd1 <= 0
 
   clock = Clock(dut.clk, 100, units="ns")
   cocotb.fork(clock.start())
@@ -147,5 +148,5 @@ async def test_sudoku_puzzle(dut):
 
   await test_puzzle(dut,
     "4...2.....35.....778.39...45.4......6.2.8.7.3......5.91...48.353.....28.....3...6",
-    "469127358235864197781395624594673812612589743873412569126748935347956281958231476",1)
+    "469127358235864197781395624594673812612589743873412569126748935347956281958231476",1,2500)
 
