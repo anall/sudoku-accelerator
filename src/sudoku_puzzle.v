@@ -48,10 +48,10 @@ module sudoku_puzzle (
 wire [8:0] values [80:0];
 
 reg [8:0] valid_row;       // used as a temporary
-reg [8:0] valid_col [9]; // need the full set, as these will be set at the end
-reg [8:0] valid_box [3]; // only need three of these
+reg [8:0] valid_col [8:0]; // need the full set, as these will be set at the end
+reg [8:0] valid_box [2:0]; // only need three of these
 
-reg [3:0] count_row [9];
+reg [3:0] count_row [8:0];
 
 reg cell_addr_i = 0;
 reg latch_singleton = 0;
@@ -147,7 +147,7 @@ always @(posedge clk) begin
       phase_ct <= 0;
     end else begin
       case ( state )
-        STATE_LSINGLE : begin
+        STATE_LSINGLE : begin : blk_state_lsingle
           integer c;
 
           latch_singleton <= 0;
@@ -218,7 +218,7 @@ always @(posedge clk) begin
           cell_addr_i <= 1;
           state <= STATE_ELIM_SAVE_ROW;
         end
-        STATE_ELIM_SAVE_ROW : begin
+        STATE_ELIM_SAVE_ROW : begin : blk_state_elim_save_row
           integer c;
           for (c = 0; c < 9; c = c + 1) begin
             wdata_i[9*(c+1)-1 -: 9] <= valid_box[c/3];
@@ -242,7 +242,7 @@ always @(posedge clk) begin
             state <= STATE_ELIM_ITER_ROW;
           end
         end
-        STATE_ELIM_SAVE_BOX : begin
+        STATE_ELIM_SAVE_BOX : begin : blk_state_elim_save_box
           integer c;
           if ( row_en_i[8] ) begin
             row_en_i <= 9'b111111111;
@@ -270,7 +270,7 @@ always @(posedge clk) begin
           row_en_i <= 0;
           state <= STATE_LSINGLE;
         end
-        STATE_NAKED_ITER_ROW : begin
+        STATE_NAKED_ITER_ROW : begin : blk_state_naked_iter_row
           integer c;
           integer t;
 
@@ -288,14 +288,14 @@ always @(posedge clk) begin
             phase_ct <= phase_ct + 1;
           end
         end
-        STATE_NAKED_PROC1_ROW : begin
+        STATE_NAKED_PROC1_ROW : begin : blk_state_naked_proc1_row
           integer c;
           for (c = 0; c < 9; c = c + 1) begin
             valid_row[c] <= count_row[c] == 1;
           end
           state <= STATE_NAKED_PROC2_ROW;
         end
-        STATE_NAKED_PROC2_ROW : begin
+        STATE_NAKED_PROC2_ROW : begin : blk_state_naked_proc2_row
           integer c;
           integer t;
           if ( valid_row )
@@ -307,7 +307,7 @@ always @(posedge clk) begin
           end
           state <= STATE_NAKED_SAVE_ROW;
         end
-        STATE_NAKED_SAVE_ROW : begin
+        STATE_NAKED_SAVE_ROW : begin : blk_state_naked_save_row
           integer c;
 
           we_i <= 0;

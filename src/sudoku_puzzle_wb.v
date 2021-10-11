@@ -72,13 +72,13 @@ wire [1:0] pzl_sel = {
   puzzles_sel & ! pzl_id
 };
 
-wire [8:0] xform_dat_t1h [3];
+wire [8:0] xform_dat_t1h [2:0];
 
 spw_to_one_hot xt1h0(.value(wb_dat_i[3:0]), .result(xform_dat_t1h[0]), .invert(pzl_adr_type));
 spw_to_one_hot xt1h1(.value(wb_dat_i[11:8]), .result(xform_dat_t1h[1]), .invert(pzl_adr_type));
 spw_to_one_hot xt1h2(.value(wb_dat_i[19:16]), .result(xform_dat_t1h[2]), .invert(pzl_adr_type));
 
-wire [3:0] xform_dat_fxl [3];
+wire [3:0] xform_dat_fxl [2:0];
 
 spw_xlate xfx0(.value(pzl_dat_o[8:0]), .result(xform_dat_fxl[0]), .pop(pzl_adr_type));
 spw_xlate xfx1(.value(pzl_dat_o[17:9]), .result(xform_dat_fxl[1]), .pop(pzl_adr_type));

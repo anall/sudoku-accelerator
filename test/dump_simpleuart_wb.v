@@ -16,7 +16,7 @@
 module dump();
     initial begin
         $dumpfile ("vcd/simpleuart_wb.vcd");
-        $dumpvars (0, simpleuart_wb);
+        $dumpvars (0, simpleuart_fifo_wb);
         #1;
     end
 endmodule

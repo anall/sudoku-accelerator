@@ -26,13 +26,13 @@ test_sudoku_puzzle_wb:
 test_sudoku_puzzle_wb_accel:
 	rm -rf sim_build/
 	mkdir sim_build/
-	iverilog -o sim_build/sim.vvp -s sudoku_accelerator -s dump -g2012 src/sudoku_accelerator.v src/simpleuart.v src/sudoku_puzzle_wb.v src/sudoku_puzzle.v src/sudoku_cell.v test/dump_sudoku_accelerator.v
+	iverilog -o sim_build/sim.vvp -s sudoku_accelerator -s dump -g2012 src/sudoku_accelerator.v src/simpleuart_fifo.v src/sudoku_puzzle_wb.v src/sudoku_puzzle.v src/sudoku_cell.v test/dump_sudoku_accelerator.v
 	PYTHONOPTIMIZE=${NOASSERT} MODULE=test.test_sudoku_puzzle_wb vvp -M $$(cocotb-config --prefix)/cocotb/libs -m libcocotbvpi_icarus sim_build/sim.vvp
 
 test_simpleuart_wb_accel:
 	rm -rf sim_build/
 	mkdir sim_build/
-	iverilog -o sim_build/sim.vvp -s sudoku_accelerator -s dump -g2012 src/sudoku_accelerator.v src/simpleuart.v src/sudoku_puzzle_wb.v src/sudoku_puzzle.v src/sudoku_cell.v test/dump_sudoku_accelerator.v
+	iverilog -o sim_build/sim.vvp -s sudoku_accelerator -s dump -g2012 src/sudoku_accelerator.v src/simpleuart_fifo.v src/sudoku_puzzle_wb.v src/sudoku_puzzle.v src/sudoku_cell.v test/dump_sudoku_accelerator.v
 	PYTHONOPTIMIZE=${NOASSERT} IN_ACCEL=1 MODULE=test.test_simpleuart_wb vvp -M $$(cocotb-config --prefix)/cocotb/libs -m libcocotbvpi_icarus sim_build/sim.vvp
 
 test_sudoku_puzzle_wb_gl:
@@ -50,13 +50,13 @@ test_sudoku_cell:
 test_simpleuart:
 	rm -rf sim_build/
 	mkdir sim_build/
-	iverilog -o sim_build/sim.vvp -s simpleuart -s dump -g2012 src/simpleuart.v test/dump_simpleuart.v
+	iverilog -o sim_build/sim.vvp -s simpleuart_fifo -s dump -g2012 src/simpleuart_fifo.v test/dump_simpleuart.v
 	PYTHONOPTIMIZE=${NOASSERT} MODULE=test.test_simpleuart vvp -M $$(cocotb-config --prefix)/cocotb/libs -m libcocotbvpi_icarus sim_build/sim.vvp
 
 test_simpleuart_wb:
 	rm -rf sim_build/
 	mkdir sim_build/
-	iverilog -o sim_build/sim.vvp -s simpleuart_wb -s dump -g2012 src/simpleuart.v test/dump_simpleuart_wb.v
+	iverilog -o sim_build/sim.vvp -s simpleuart_fifo_wb -s dump -g2012 src/simpleuart_fifo.v test/dump_simpleuart_wb.v
 	PYTHONOPTIMIZE=${NOASSERT} MODULE=test.test_simpleuart_wb vvp -M $$(cocotb-config --prefix)/cocotb/libs -m libcocotbvpi_icarus sim_build/sim.vvp
 
 show_synth_%: src/%.v

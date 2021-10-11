@@ -29,7 +29,7 @@ module sudoku_accelerator (
   output        wb_ack_o,
   output [31:0] wb_dat_o,
 
-  output uart_enabled,
+  output uart_enabled_n,
   output ser_tx,
   input ser_rx,
 
@@ -49,6 +49,9 @@ wire [31:0] sudoku_dat;
 wire uart_ack;
 wire [31:0] uart_dat;
 
+wire uart_enabled;
+assign uart_enabled_n = ~uart_enabled;
+
 assign wb_ack_o = sudoku_addr ? sudoku_ack : uart_addr ? uart_ack : 0;
 assign wb_dat_o = sudoku_addr ? sudoku_dat : uart_addr ? uart_dat : 0;
 
@@ -64,7 +67,7 @@ sudoku_puzzle_wb sudoku(
   .interrupt(interrupt_sudoku)
 );
 
-simpleuart_wb #(.BASE_ADR(32'h30800000)) uart (
+simpleuart_fifo_wb #(.BASE_ADR(32'h30800000)) uart (
   .wb_clk_i(wb_clk_i), .wb_rst_i(wb_rst_i),
   .wb_adr_i(wb_adr_i), .wb_dat_i(wb_dat_i),
   .wb_sel_i(wb_sel_i), .wb_we_i(uart_addr & wb_we_i),

@@ -21,7 +21,7 @@
  *  SPDX-License-Identifier: ISC
  */
 // Modified 2021 Andrea Nall, added FIFO
-module simpleuart_wb # (
+module simpleuart_fifo_wb # (
     parameter BASE_ADR = 32'h 2000_0000,
     parameter CLK_DIV = 8'h00,
     parameter DATA = 8'h04,
@@ -71,7 +71,7 @@ module simpleuart_wb # (
     assign wb_ack_o = (simpleuart_reg_div_sel || simpleuart_reg_dat_sel
           || simpleuart_reg_cfg_sel) && (!reg_dat_wait);
     
-    simpleuart simpleuart (
+    simpleuart_fifo simpleuart (
         .clk    (wb_clk_i),
         .resetn (resetn),
 
@@ -98,7 +98,7 @@ module simpleuart_wb # (
 
 endmodule
 
-module simpleuart (
+module simpleuart_fifo (
     input clk,
     input resetn,
 
