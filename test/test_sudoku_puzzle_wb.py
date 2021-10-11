@@ -107,16 +107,6 @@ async def test_sudoku_puzzle(dut):
   o_puzzle = await read_puzzle(wbm,1)
   print(o_puzzle)
   
-#  await wbm.send_cycle([WBOp(0x3000_0000,1<<17,0,0b1111)]);
-#  await wbm.send_cycle([WBOp(0x3000_0008,0b100)]);
-#
-#  while ( dut.interrupt == 0 ):
-#    await ClockCycles(dut.wb_clk_i, 1)
-#
-#  assert ( (await wbm.send_cycle([WBOp(0x3000_0008)]))[0].datrd & 0b10000000000 == 0b10000000000 )
-#  await wbm.send_cycle([WBOp(0x3000_0008,0b00)])
-#  assert( (await wbm.send_cycle([WBOp(0x3000_0008)]))[0].datrd == 0 )
-
   c_puzzle = await read_puzzle(wbm,1)
   print(c_puzzle)
 

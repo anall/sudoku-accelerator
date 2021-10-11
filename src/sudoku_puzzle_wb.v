@@ -40,7 +40,7 @@ wire [26:0] pzl_rdata_1;
 wire [3:0] pzl_adr_cell = wb_adr_i[7:4];
 wire       pzl_adr_type  = wb_adr_i[8];
 wire       pzl_adr_xform = wb_adr_i[9];
-wire       pzl_id = pzl_copy ? pzl_copy_to_a : wb_adr_i[10];
+wire       pzl_id = wb_adr_i[10];
 
 wire [26:0] pzl_rdata =
   pzl_id ? pzl_rdata_1 : pzl_rdata_0;
@@ -55,7 +55,7 @@ wire addr_sel   = wb_valid & (wb_adr_i & 32'h FFFF_0000) == BASE_ADR & wb_adr_i[
 
 wire puzzles_sel = addr_sel & wb_adr_i[15:12] == 1;
 
-wire [2:0] pzl_addr_third = pzl_copy ? pzl_copy_third : (
+wire [2:0] pzl_addr_third = (
   wb_adr_i[3:2] == 0 ? 3'b001 :
   wb_adr_i[3:2] == 1 ? 3'b010 :
   wb_adr_i[3:2] == 2 ? 3'b100 :
@@ -95,23 +95,23 @@ assign wb_dat_o =
     : pzl_dat_o) :
    addr_ctrl_status ? {
       8'd0,
-      6'd0,pzl_copy,pzl_copy_to_a,
+      8'd0,
       4'd0,pzl_illegal[1],pzl_solved[1],pzl_stuck[1],pzl_busy[1],
       4'd0,pzl_illegal[0],pzl_solved[0],pzl_stuck[0],pzl_busy[0]
     } :
     addr_ctrl_naked ? {30'd0,pzl_allow_naked[1],pzl_allow_naked[0]} :
-    addr_ctrl_ie    ? {16'd0,5'd0,pzl_interrupt,5'd0,pzl_ie_copy,pzl_ie_solved} :
+    addr_ctrl_ie    ? {16'd0,5'd0,pzl_interrupt,6'd0,pzl_ie_solved} :
       ~0);
 
 reg pzl_special_handled;
 reg [26:0] pzl_wdata_i;
 wire [26:0] pzl_wdata =
-  (pzl_copy|pzl_special_handled) ? pzl_wdata_i :
+  (pzl_special_handled) ? pzl_wdata_i :
   pzl_adr_xform ?
       {xform_dat_t1h[2],xform_dat_t1h[1],xform_dat_t1h[0]}
     : wb_dat_i[26:0];
 
-wire [4:0] pzl_addr = pzl_copy ? {pzl_copy_type,pzl_copy_cell} : {pzl_adr_type,pzl_adr_cell};
+wire [4:0] pzl_addr = {pzl_adr_type,pzl_adr_cell};
 
 wire pzl_we = puzzles_sel &
   pzl_adr_xform ? ( wb_we_i & (wb_sel_full | pzl_special_handled) )
@@ -121,18 +121,9 @@ reg [1:0] pzl_start;
 reg [1:0] pzl_abort;
 
 assign interrupt = pzl_interrupt != 0;
-wire [2:0] pzl_interrupt = {~pzl_copy&pzl_ie_copy,pzl_solved[1]&pzl_ie_solved[1],pzl_solved[0]&pzl_ie_solved[0]};
+wire [1:0] pzl_interrupt = {pzl_solved[1]&pzl_ie_solved[1],pzl_solved[0]&pzl_ie_solved[0]};
 reg [1:0] pzl_allow_naked;
 reg [1:0] pzl_ie_solved;
-
-reg pzl_copy;
-reg pzl_copy_to_a;
-reg pzl_ie_copy;
-reg pzl_copy_we;
-
-reg pzl_copy_type;
-reg [3:0] pzl_copy_cell;
-reg [2:0] pzl_copy_third;
 
 
 always @(posedge wb_clk_i) begin
@@ -140,38 +131,19 @@ always @(posedge wb_clk_i) begin
     pzl_start <= 0;
     pzl_abort <= 0;
     pzl_allow_naked <= 2'b11;
-    pzl_copy <= 0;
-    pzl_copy_to_a <= 0;
-    pzl_copy_type <= 0;
-    pzl_copy_cell <= 0;
-    pzl_copy_third <= 0;
-    pzl_copy_we <= 0;
 
     pzl_ie_solved <= 0;
-    pzl_ie_copy <= 0;
   end else if ( wb_we_i && addr_ctrl_ie && wb_ack_o && wb_sel_i[0] ) begin
     pzl_ie_solved <= wb_dat_i[1:0];
-    pzl_ie_copy <= wb_dat_i[2];
   end else if ( wb_we_i && addr_ctrl_status && wb_ack_o ) begin
-    if ( wb_sel_i[3] && wb_dat_i[17] ) begin // if we're starting a copy operation
-      if ( pzl_start == 0 && pzl_busy == 0 && !pzl_copy ) begin // make sure both solvers are idle, otherwise this won't do anything
-        pzl_copy_type <= 0;
-        pzl_copy_cell <= 0;
-        pzl_copy_third <= 1;
-        pzl_copy <= 1;
-        pzl_copy_to_a <= wb_dat_i[16];
-        pzl_copy_we <= 0;
-      end
-    end else begin
-      if ( wb_dat_i[0] && wb_sel_i[0] )
-        pzl_start[0] <= 1;
-      if ( wb_dat_i[1] && wb_sel_i[0] )
-        pzl_abort[0] <= 1;
-      if ( wb_dat_i[8] && wb_sel_i[1] )
-        pzl_start[1] <= 1;
-      if ( wb_dat_i[9] && wb_sel_i[1] )
-        pzl_abort[1] <= 1;
-    end
+    if ( wb_dat_i[0] && wb_sel_i[0] )
+      pzl_start[0] <= 1;
+    if ( wb_dat_i[1] && wb_sel_i[0] )
+      pzl_abort[0] <= 1;
+    if ( wb_dat_i[8] && wb_sel_i[1] )
+      pzl_start[1] <= 1;
+    if ( wb_dat_i[9] && wb_sel_i[1] )
+      pzl_abort[1] <= 1;
   end else if ( wb_we_i && addr_ctrl_naked && wb_sel_i[0] && wb_ack_o ) begin
     if ( ~pzl_busy[0] )
       pzl_allow_naked[0] <= wb_dat_i[0];
@@ -186,29 +158,6 @@ always @(posedge wb_clk_i) begin
       pzl_abort[0] <= 0;
     if ( pzl_abort[1] && ~pzl_busy[1] )
       pzl_abort[1] <= 0;
-    if ( pzl_copy ) begin
-      if ( ~ pzl_copy_we ) begin
-        pzl_wdata_i <= pzl_rdata;
-        pzl_copy_we <= 1;
-      end else if ( pzl_copy_third == 3'b100 & pzl_copy_cell == 8 ) begin
-        if ( pzl_copy_type ) begin
-          pzl_copy_we <= 0;
-          pzl_copy <= 0; // and we're done
-        end else begin
-          pzl_copy_we <= 0;
-          pzl_copy_cell <= 0;
-          pzl_copy_third <= 1;
-          pzl_copy_type <= 1;
-        end
-      end else if ( pzl_copy_third == 3'b100 ) begin
-        pzl_copy_we <= 0;
-        pzl_copy_third <= 1;
-        pzl_copy_cell <= pzl_copy_cell + 1;
-      end else begin
-        pzl_copy_we <= 0;
-        pzl_copy_third = {pzl_copy_third[1:0],1'b0};
-      end
-    end
   end
 end
 
@@ -218,7 +167,7 @@ wire [1:0] pzl_stuck;
 wire [1:0] pzl_illegal;
 
 wire wb_ack_o = (
-    (puzzles_sel & (~wb_we_i|~pzl_wb_requires_special|pzl_special_handled) & ~pzl_copy) // no writing/READING at all if copy is active
+    (puzzles_sel & (~wb_we_i|~pzl_wb_requires_special|pzl_special_handled))
   | addr_ctrl_status
   | addr_ctrl_naked
   | addr_ctrl_ie
@@ -250,11 +199,9 @@ always @(posedge wb_clk_i) begin
 end
 
 wire pzl_we_0 =
-  pzl_copy ? (pzl_copy_to_a & pzl_copy_we) :
     ( pzl_we & pzl_sel[0] & wb_we_i & (wb_sel_full|pzl_special_handled) );
 
 wire pzl_we_1 =
-  pzl_copy ? (~pzl_copy_to_a & pzl_copy_we) :
     ( pzl_we & pzl_sel[1] & wb_we_i & (wb_sel_full|pzl_special_handled) );
 
 sudoku_puzzle puzzle0 (
