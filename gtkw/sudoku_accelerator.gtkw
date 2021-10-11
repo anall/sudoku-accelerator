@@ -1,0 +1,77 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Mon Oct 11 18:29:47 2021
+[*]
+[dumpfile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/vcd/sudoku_accelerator.vcd"
+[dumpfile_mtime] "Mon Oct 11 18:29:02 2021"
+[dumpfile_size] 1999683
+[savefile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/gtkw/sudoku_accelerator.gtkw"
+[timestart] 0
+[size] 1731 795
+[pos] 123 0
+*-13.000000 32550 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 205
+[signals_width] 204
+[sst_expanded] 1
+[sst_vpaned_height] 230
+@28
+sudoku_accelerator.wb_clk_i
+sudoku_accelerator.interrupt
+sudoku_accelerator.interrupt_sudoku
+sudoku_accelerator.interrupt_uart
+sudoku_accelerator.wb_rst_i
+@22
+sudoku_accelerator.wb_adr_i[31:0]
+@28
+sudoku_accelerator.sudoku_addr
+sudoku_accelerator.uart_addr
+@c00022
+sudoku_accelerator.wb_dat_i[31:0]
+@28
+(0)sudoku_accelerator.wb_dat_i[31:0]
+(1)sudoku_accelerator.wb_dat_i[31:0]
+(2)sudoku_accelerator.wb_dat_i[31:0]
+(3)sudoku_accelerator.wb_dat_i[31:0]
+(4)sudoku_accelerator.wb_dat_i[31:0]
+(5)sudoku_accelerator.wb_dat_i[31:0]
+(6)sudoku_accelerator.wb_dat_i[31:0]
+(7)sudoku_accelerator.wb_dat_i[31:0]
+(8)sudoku_accelerator.wb_dat_i[31:0]
+(9)sudoku_accelerator.wb_dat_i[31:0]
+(10)sudoku_accelerator.wb_dat_i[31:0]
+(11)sudoku_accelerator.wb_dat_i[31:0]
+(12)sudoku_accelerator.wb_dat_i[31:0]
+(13)sudoku_accelerator.wb_dat_i[31:0]
+(14)sudoku_accelerator.wb_dat_i[31:0]
+(15)sudoku_accelerator.wb_dat_i[31:0]
+(16)sudoku_accelerator.wb_dat_i[31:0]
+(17)sudoku_accelerator.wb_dat_i[31:0]
+(18)sudoku_accelerator.wb_dat_i[31:0]
+(19)sudoku_accelerator.wb_dat_i[31:0]
+(20)sudoku_accelerator.wb_dat_i[31:0]
+(21)sudoku_accelerator.wb_dat_i[31:0]
+(22)sudoku_accelerator.wb_dat_i[31:0]
+(23)sudoku_accelerator.wb_dat_i[31:0]
+(24)sudoku_accelerator.wb_dat_i[31:0]
+(25)sudoku_accelerator.wb_dat_i[31:0]
+(26)sudoku_accelerator.wb_dat_i[31:0]
+(27)sudoku_accelerator.wb_dat_i[31:0]
+(28)sudoku_accelerator.wb_dat_i[31:0]
+(29)sudoku_accelerator.wb_dat_i[31:0]
+(30)sudoku_accelerator.wb_dat_i[31:0]
+(31)sudoku_accelerator.wb_dat_i[31:0]
+@1401200
+-group_end
+@22
+sudoku_accelerator.wb_dat_o[31:0]
+@28
+sudoku_accelerator.wb_we_i
+sudoku_accelerator.wb_ack_o
+sudoku_accelerator.wb_stb_i
+sudoku_accelerator.wb_cyc_i
+sudoku_accelerator.uart_enabled
+sudoku_accelerator.ser_rx
+@29
+sudoku_accelerator.ser_tx
+[pattern_trace] 1
+[pattern_trace] 0
