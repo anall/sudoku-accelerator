@@ -20,6 +20,7 @@ from cocotb.triggers import RisingEdge, FallingEdge, ClockCycles
 from cocotbext.uart import UartSource, UartSink
 from cocotbext.wishbone.driver import WishboneMaster
 from cocotbext.wishbone.driver import WBOp
+from os import environ
 import random
 
 async def reset(dut):
@@ -32,6 +33,10 @@ async def reset(dut):
 async def test_writeread(dut): # doing both in the same out of laziness
     clock_freq = 10_000_000;
     baud = 115200;
+    if environ.get("IN_ACCEL"):
+      base_addr = 0x3100_0000;
+    else:
+      base_addr = 0x2000_0000;
 
     clock = Clock(dut.wb_clk_i, 100, units="ns")
     cocotb.fork(clock.start())
@@ -56,8 +61,8 @@ async def test_writeread(dut): # doing both in the same out of laziness
     await reset(dut)
 
     await wbs.send_cycle([
-      WBOp(0x2000_0000,int(clock_freq/baud)),
-      WBOp(0x2000_0008,0b11)])
+      WBOp(base_addr|0,int(clock_freq/baud)),
+      WBOp(base_addr|8,0b11)])
 
     string = b'sphinx'
     await uart_source.write(string)
@@ -66,7 +71,7 @@ async def test_writeread(dut): # doing both in the same out of laziness
     while ( len(result) < 2 ):
       while ( dut.interrupt == 0 ):
         await ClockCycles(dut.wb_clk_i, 1)
-      wb = (await wbs.send_cycle([WBOp(0x2000_0004)]))[0]
+      wb = (await wbs.send_cycle([WBOp(base_addr|4)]))[0]
       await ClockCycles(dut.wb_clk_i, 2)
       assert( dut.interrupt == 0 )
       assert( wb.datrd != 0xffffffff );
@@ -74,7 +79,7 @@ async def test_writeread(dut): # doing both in the same out of laziness
       
     await uart_source.wait()  
     
-    wbc = (await wbs.send_cycle([WBOp(0x2000_0004,idle=1),WBOp(0x2000_0004,idle=4),WBOp(0x2000_0004,idle=1),WBOp(0x2000_0004,idle=1)]))
+    wbc = (await wbs.send_cycle([WBOp(base_addr|4,idle=1),WBOp(base_addr|4,idle=4),WBOp(base_addr|4,idle=1),WBOp(base_addr|4,idle=1)]))
     for wb in wbc:
       assert( wb.datrd != 0xffffffff );
       result = result + bytes(chr(wb.datrd&0xff),'ascii')
@@ -83,24 +88,24 @@ async def test_writeread(dut): # doing both in the same out of laziness
     assert(result == string)
 
     await wbs.send_cycle([
-      WBOp(0x2000_0000,int(clock_freq/baud)),
-      WBOp(0x2000_0008,0b101)])
+      WBOp(base_addr|0,int(clock_freq/baud)),
+      WBOp(base_addr|8,0b101)])
 
     while ( dut.interrupt == 0 ):
       await ClockCycles(dut.wb_clk_i, 1)
 
     string = b'sphinx of black quartz'
     await wbs.send_cycle([
-      WBOp(0x2000_0004,ch,idle=1) for ch in string
+      WBOp(base_addr|4,ch,idle=1) for ch in string
     ])
     print('waiting for interrupt');
     while ( dut.interrupt == 0 ): # wait for interrupt
       await ClockCycles(dut.wb_clk_i, 1)
-    assert( (await wbs.send_cycle([WBOp(0x2000_0008)]))[0].datrd & 1<<10 ); # make sure this is fifo empty
-    await wbs.send_cycle([WBOp(0x2000_0008,0b001)]) # disable interrupt
+    assert( (await wbs.send_cycle([WBOp(base_addr|8)]))[0].datrd & 1<<10 ); # make sure this is fifo empty
+    await wbs.send_cycle([WBOp(base_addr|8,0b001)]) # disable interrupt
     assert( dut.interrupt == 0 ) # and verify
     print("waiting for idle uart") 
-    while ( not (await wbs.send_cycle([WBOp(0x2000_0008)]))[0].datrd & 1<<12 ):
+    while ( not (await wbs.send_cycle([WBOp(base_addr|8)]))[0].datrd & 1<<12 ):
       pass
 
     result = await uart_sink.read(len(string))

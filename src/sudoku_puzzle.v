@@ -19,11 +19,11 @@ module sudoku_puzzle (
   input wire clk,
   input wire reset,
 
-  // 9 cells wide (of 9 bits), able to transfer a full row of the puzzle at a time, or one full validity set
-  // 8         7         6         5         4         3         2         1
-  // 098765432109876543210987654321098765432109876543210987654321098765432109876543210
-  // 123456789123456789123456789123456789123456789123456789123456789123456789123456789
-  // 1        2        3        4        5        6        7        8        9
+  // 3 cells wide (of 9 bits), unfortunately unable to route the outer levels with the full set
+  //       2         1
+  // 654321098765432109876543210
+  // 123456789123456789123456789
+  // 7        8        9
   input wire [26:0] wdata,
   output wire [26:0] rdata,
 

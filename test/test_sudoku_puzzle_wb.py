@@ -70,8 +70,8 @@ async def read_puzzle(wbm,pid):
 async def test_sudoku_puzzle(dut):
   clock = None
   if environ.get("GATELEVEL"):
-    dut.VPWR <= 1
-    dut.VGND <= 0
+    dut.vccd1 <= 1
+    dut.vssd1 <= 0
 
   clock = Clock(dut.wb_clk_i, 100, units="ns")
   cocotb.fork(clock.start())
@@ -91,33 +91,48 @@ async def test_sudoku_puzzle(dut):
 
   await reset(dut)
 
-  i_puzzle = "..1.6..24.6.4...73.7....1.5.....72.88.239.5473..284.9...56..4...2....31.946..17..";
+  i_puzzle = "5.1.6..24.6.4...73.7....1.5.....72.88.239.5473..284.9...56..4...2....31.946..17..";
   await load_puzzle(wbm,0,i_puzzle)
-  await wbm.send_cycle([
-    WBOp(0x3000_1000 | 0<<10 | 1<<9 | 0<<4 | 0<<2,5,0,0b1),
-  ]);
+  #await wbm.send_cycle([
+  #  WBOp(0x3000_1000 | 0<<10 | 1<<9 | 0<<4 | 0<<2,5,0,0b1),
+  #]);
   v_puzzle = "5.1.6..24.6.4...73.7....1.5.....72.88.239.5473..284.9...56..4...2....31.946..17..";
   o_puzzle = await read_puzzle(wbm,0)
   print(v_puzzle)
   print(o_puzzle)
 
   assert(o_puzzle == v_puzzle)
-  
-  await wbm.send_cycle([WBOp(0x3000_0000,1<<17,0,0b1111)]);
 
-#  while ( (await wbm.send_cycle([WBOp(0x3000_0000,None,0,0b1111)]))[0].datrd & 1<<17 == 1<<17 ):
-#    pass
+  await load_puzzle(wbm,1,v_puzzle)
+  o_puzzle = await read_puzzle(wbm,1)
+  print(o_puzzle)
+  
+#  await wbm.send_cycle([WBOp(0x3000_0000,1<<17,0,0b1111)]);
+#  await wbm.send_cycle([WBOp(0x3000_0008,0b100)]);
+#
+#  while ( dut.interrupt == 0 ):
+#    await ClockCycles(dut.wb_clk_i, 1)
+#
+#  assert ( (await wbm.send_cycle([WBOp(0x3000_0008)]))[0].datrd & 0b10000000000 == 0b10000000000 )
+#  await wbm.send_cycle([WBOp(0x3000_0008,0b00)])
+#  assert( (await wbm.send_cycle([WBOp(0x3000_0008)]))[0].datrd == 0 )
 
   c_puzzle = await read_puzzle(wbm,1)
   print(c_puzzle)
 
   assert(c_puzzle == v_puzzle)
 
-  await wbm.send_cycle([WBOp(0x3000_0000,1<<8|1)]);
+  await wbm.send_cycle([WBOp(0x3000_0000,1|1<<8)]);
   await wbm.send_cycle([WBOp(0x3000_0008,0b11)]);
 
   while ( dut.interrupt == 0 ):
     await ClockCycles(dut.wb_clk_i, 1)
+  
+  while ( (await wbm.send_cycle([WBOp(0x3000_0008)]))[0].datrd & 0b1100000000 != 0b1100000000 ):
+    pass
+
+  await wbm.send_cycle([WBOp(0x3000_0008,0b00)])
+  assert( (await wbm.send_cycle([WBOp(0x3000_0008)]))[0].datrd == 0 )
 
   s_puzzle0 = await read_puzzle(wbm,0)
   s_puzzle1 = await read_puzzle(wbm,1)

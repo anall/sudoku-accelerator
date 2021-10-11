@@ -1,23 +1,24 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Sun Oct 10 17:20:35 2021
+[*] Sun Oct 10 23:33:16 2021
 [*]
 [dumpfile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/vcd/sudoku_puzzle_wb.vcd"
-[dumpfile_mtime] "Sun Oct 10 17:19:18 2021"
-[dumpfile_size] 730104
+[dumpfile_mtime] "Sun Oct 10 23:32:53 2021"
+[dumpfile_size] 750150
 [savefile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/gtkw/sudoku_puzzle_wb.gtkw"
-[timestart] 13640
+[timestart] 26940
 [size] 1579 801
-[pos] 222 0
-*-12.000000 31600 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] 444 -220
+*-12.000000 44400 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] sudoku_puzzle_wb.
 [treeopen] sudoku_puzzle_wb.puzzle0.
 [sst_width] 205
 [signals_width] 454
 [sst_expanded] 1
 [sst_vpaned_height] 229
-@28
+@29
 sudoku_puzzle_wb.wb_clk_i
+@28
 sudoku_puzzle_wb.wb_rst_i
 sudoku_puzzle_wb.interrupt
 sudoku_puzzle_wb.wb_sel_i[3:0]
@@ -49,7 +50,6 @@ sudoku_puzzle_wb.pzl_solved[1:0]
 sudoku_puzzle_wb.pzl_illegal[1:0]
 @22
 sudoku_puzzle_wb.puzzle0.cell_solved[80:0]
-@23
 puzzle1.cell_solved[80:0]
 [pattern_trace] 1
 [pattern_trace] 0
