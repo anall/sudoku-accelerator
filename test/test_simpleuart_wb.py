@@ -34,7 +34,7 @@ async def test_writeread(dut): # doing both in the same out of laziness
     clock_freq = 10_000_000;
     baud = 115200;
     if environ.get("IN_ACCEL"):
-      base_addr = 0x3100_0000;
+      base_addr = 0x3080_0000;
     else:
       base_addr = 0x2000_0000;
 

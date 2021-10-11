@@ -92,25 +92,25 @@ async def test_sudoku_puzzle(dut):
   await reset(dut)
 
   i_puzzle = "5.1.6..24.6.4...73.7....1.5.....72.88.239.5473..284.9...56..4...2....31.946..17..";
+  s_puzzle = "581763924269415873473928165694157238812396547357284691135672489728549316946831752";
   await load_puzzle(wbm,0,i_puzzle)
-  #await wbm.send_cycle([
-  #  WBOp(0x3000_1000 | 0<<10 | 1<<9 | 0<<4 | 0<<2,5,0,0b1),
-  #]);
-  v_puzzle = "5.1.6..24.6.4...73.7....1.5.....72.88.239.5473..284.9...56..4...2....31.946..17..";
+  await wbm.send_cycle([
+    WBOp(0x3000_1000 | 0<<10 | 1<<9 | 0<<4 | 0<<2,6,0,0b1),
+  ]);
   o_puzzle = await read_puzzle(wbm,0)
-  print(v_puzzle)
+  print(i_puzzle)
   print(o_puzzle)
 
-  assert(o_puzzle == v_puzzle)
+  assert(o_puzzle == i_puzzle)
 
-  await load_puzzle(wbm,1,v_puzzle)
+  await load_puzzle(wbm,1,i_puzzle)
   o_puzzle = await read_puzzle(wbm,1)
   print(o_puzzle)
   
   c_puzzle = await read_puzzle(wbm,1)
   print(c_puzzle)
 
-  assert(c_puzzle == v_puzzle)
+  assert(c_puzzle == i_puzzle)
 
   await wbm.send_cycle([WBOp(0x3000_0000,1|1<<8)]);
   await wbm.send_cycle([WBOp(0x3000_0008,0b11)]);
@@ -129,18 +129,59 @@ async def test_sudoku_puzzle(dut):
   print(s_puzzle0)
   print(s_puzzle1)
 
-#  i_puzzle = "4...2.....35.....778.39...45.4......6.2.8.7.3......5.91...48.353.....28.....3...6";
-#  await load_puzzle(wbm,1,i_puzzle)
-#  
-#
-#  while ( (await wbm.send_cycle([WBOp(0x3000_0000,None,0,0b1111)]))[0].datrd & 1 == 1 ):
-#    pass
-#
-#  s_puzzle1 = await read_puzzle(wbm,0)
-#  print(s_puzzle1)
-#
-#  while ( (await wbm.send_cycle([WBOp(0x3000_0000,None,0,0b1111)]))[0].datrd & 1<<8 == 1<<8 ):
-#    pass
-#
-#  s_puzzle2 = await read_puzzle(wbm,1)
-#  print(s_puzzle2)
+  assert(s_puzzle0 == s_puzzle)
+  assert(s_puzzle1 == s_puzzle)
+
+  assert( (await wbm.send_cycle([WBOp(0x3000_0000)]))[0].datrd == 0b0100_0000_0100 )
+  
+  # blank the puzzle
+  i_puzzle = ".................................................................................";
+  await load_puzzle(wbm,0,i_puzzle)
+
+  base_0       = 0x3000_1000 | (0<<10) | (0<<9);
+  base_0_xlate = 0x3000_1000 | (0<<10) | (1<<9);
+
+  assert( (await wbm.send_cycle([WBOp(base_0_xlate | 1<<8 | 0<<4 | 0<<2,None,0,0b1111)]))[0].datrd == 0x090909 )
+  await wbm.send_cycle([WBOp(base_0_xlate | 1<<8 | 0<<4 | 0<<2,5,0,0b1111)])
+  assert( (await wbm.send_cycle([WBOp(base_0_xlate | 1<<8 | 0<<4 | 0<<2,None,0,0b1111)]))[0].datrd == 0x090908 )
+  assert( (await wbm.send_cycle([WBOp(base_0       | 1<<8 | 0<<4 | 0<<2,None,0,0b1111)]))[0].datrd & 0x1FF == 0b111101111 )
+
+  # load a complicated puzzle into 1
+  i_puzzle = "4...2.....35.....778.39...45.4......6.2.8.7.3......5.91...48.353.....28.....3...6";
+  await load_puzzle(wbm,1,i_puzzle)
+
+  await wbm.send_cycle([WBOp(0x3000_0000,1<<8),WBOp(0x3000_0008,0b10)])
+
+  # while we wait, load this illegal puzzle into puzzle 0
+  i_puzzle = "5.1.62.24.624...73.7....1.5.....72.88.239.5473..284.9...56..4...2....31.946..17..";
+  await load_puzzle(wbm,0,i_puzzle)
+
+  while ( dut.interrupt == 0 ):
+    await ClockCycles(dut.wb_clk_i, 1)
+
+  while ( (await wbm.send_cycle([WBOp(0x3000_0008)]))[0].datrd & 0b1000000000 != 0b1000000000 ):
+    pass
+
+  await wbm.send_cycle([WBOp(0x3000_0008,0b00)])
+  assert( (await wbm.send_cycle([WBOp(0x3000_0008)]))[0].datrd == 0 )
+
+  s_puzzle2 = await read_puzzle(wbm,1)
+  print(s_puzzle2)
+  assert(s_puzzle2 == "469127358235864197781395624594673812612589743873412569126748935347956281958231476")
+  assert( (await wbm.send_cycle([WBOp(0x3000_0000)]))[0].datrd  & 0b1111_00000000 == 0b0100_0000_0000 )
+
+  await wbm.send_cycle([WBOp(0x3000_0000,1),WBOp(0x3000_0008,0b1)])
+
+  while ( dut.interrupt == 0 ):
+    await ClockCycles(dut.wb_clk_i, 1)
+
+  while ( (await wbm.send_cycle([WBOp(0x3000_0008)]))[0].datrd & 0b0100000000 != 0b0100000000 ):
+    pass
+
+  await wbm.send_cycle([WBOp(0x3000_0008,0b00)])
+  assert( (await wbm.send_cycle([WBOp(0x3000_0008)]))[0].datrd == 0 )
+  # and verify we ended stuck/illegal
+  assert( (await wbm.send_cycle([WBOp(0x3000_0000)]))[0].datrd  & 0b1111 == 0b1010 )
+
+  s_puzzle3 = await read_puzzle(wbm,0)
+  print(s_puzzle3)

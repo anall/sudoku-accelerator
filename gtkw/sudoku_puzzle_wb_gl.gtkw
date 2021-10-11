@@ -1,0 +1,44 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Sun Oct 10 23:19:38 2021
+[*]
+[dumpfile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/vcd/sudoku_puzzle_wb.vcd"
+[dumpfile_mtime] "Sun Oct 10 23:18:39 2021"
+[dumpfile_size] 47804656
+[savefile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/gtkw/sudoku_puzzle_wb_gl.gtkw"
+[timestart] 0
+[size] 1385 778
+[pos] 162 0
+*-23.000000 6400000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 205
+[signals_width] 253
+[sst_expanded] 1
+[sst_vpaned_height] 221
+@29
+sudoku_puzzle_wb.wb_clk_i
+@28
+sudoku_puzzle_wb.wb_rst_i
+@22
+sudoku_puzzle_wb.wb_dat_i[31:0]
+sudoku_puzzle_wb.wb_dat_o[31:0]
+sudoku_puzzle_wb.wb_adr_i[31:0]
+@28
+sudoku_puzzle_wb.wb_we_i
+sudoku_puzzle_wb.wb_ack_o
+sudoku_puzzle_wb.wb_cyc_i
+sudoku_puzzle_wb.wb_stb_i
+sudoku_puzzle_wb.pzl_copy
+sudoku_puzzle_wb.pzl_copy_to_a
+sudoku_puzzle_wb.pzl_copy_type
+sudoku_puzzle_wb.pzl_ie_copy
+sudoku_puzzle_wb.interrupt
+sudoku_puzzle_wb.\puzzle0.state[0]
+sudoku_puzzle_wb.\puzzle0.state[1]
+sudoku_puzzle_wb.\puzzle0.state[2]
+sudoku_puzzle_wb.\puzzle0.state[3]
+sudoku_puzzle_wb.\puzzle1.state[0]
+sudoku_puzzle_wb.\puzzle1.state[1]
+sudoku_puzzle_wb.\puzzle1.state[2]
+sudoku_puzzle_wb.\puzzle1.state[3]
+[pattern_trace] 1
+[pattern_trace] 0

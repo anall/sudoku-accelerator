@@ -1,24 +1,23 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Sun Oct 10 23:33:16 2021
+[*] Mon Oct 11 18:28:45 2021
 [*]
 [dumpfile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/vcd/sudoku_puzzle_wb.vcd"
-[dumpfile_mtime] "Sun Oct 10 23:32:53 2021"
-[dumpfile_size] 750150
+[dumpfile_mtime] "Mon Oct 11 18:23:21 2021"
+[dumpfile_size] 1896375
 [savefile] "/home/anall/Projects/zero-to-asic/projects/sudoku-accelerator/gtkw/sudoku_puzzle_wb.gtkw"
-[timestart] 26940
+[timestart] 153240
 [size] 1579 801
-[pos] 444 -220
-*-12.000000 44400 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] 263 0
+*-12.000000 171200 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] sudoku_puzzle_wb.
 [treeopen] sudoku_puzzle_wb.puzzle0.
 [sst_width] 205
 [signals_width] 454
 [sst_expanded] 1
 [sst_vpaned_height] 229
-@29
-sudoku_puzzle_wb.wb_clk_i
 @28
+sudoku_puzzle_wb.wb_clk_i
 sudoku_puzzle_wb.wb_rst_i
 sudoku_puzzle_wb.interrupt
 sudoku_puzzle_wb.wb_sel_i[3:0]
@@ -26,16 +25,8 @@ sudoku_puzzle_wb.wb_sel_i[3:0]
 sudoku_puzzle_wb.wb_adr_i[31:0]
 @28
 sudoku_puzzle_wb.wb_dat_i[31:0]
-sudoku_puzzle_wb.pzl_copy
-sudoku_puzzle_wb.pzl_copy_to_a
-sudoku_puzzle_wb.pzl_copy_third[2:0]
-@22
-sudoku_puzzle_wb.pzl_copy_cell[3:0]
-@28
-sudoku_puzzle_wb.pzl_copy_type
 sudoku_puzzle_wb.wb_dat_o[31:0]
 @22
-sudoku_puzzle_wb.pzl_wdata_i[26:0]
 sudoku_puzzle_wb.pzl_rdata[26:0]
 @28
 sudoku_puzzle_wb.wb_ack_o
@@ -44,12 +35,19 @@ sudoku_puzzle_wb.wb_stb_i
 sudoku_puzzle_wb.wb_cyc_i
 sudoku_puzzle_wb.addr_sel
 sudoku_puzzle_wb.puzzles_sel
+sudoku_puzzle_wb.pzl_abort[1:0]
+sudoku_puzzle_wb.pzl_start[1:0]
 sudoku_puzzle_wb.pzl_busy[1:0]
 sudoku_puzzle_wb.pzl_stuck[1:0]
 sudoku_puzzle_wb.pzl_solved[1:0]
 sudoku_puzzle_wb.pzl_illegal[1:0]
+sudoku_puzzle_wb.pzl_interrupt[1:0]
+sudoku_puzzle_wb.pzl_ie_idle[1:0]
 @22
 sudoku_puzzle_wb.puzzle0.cell_solved[80:0]
 puzzle1.cell_solved[80:0]
+@28
+sudoku_puzzle_wb.pzl_adr_type
+sudoku_puzzle_wb.pzl_adr_xform
 [pattern_trace] 1
 [pattern_trace] 0

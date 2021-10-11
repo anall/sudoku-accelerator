@@ -100,13 +100,11 @@ assign wb_dat_o =
       4'd0,pzl_illegal[0],pzl_solved[0],pzl_stuck[0],pzl_busy[0]
     } :
     addr_ctrl_naked ? {30'd0,pzl_allow_naked[1],pzl_allow_naked[0]} :
-    addr_ctrl_ie    ? {16'd0,5'd0,pzl_interrupt,6'd0,pzl_ie_solved} :
+    addr_ctrl_ie    ? {16'd0,6'd0,pzl_interrupt,6'd0,pzl_ie_idle} :
       ~0);
 
-reg pzl_special_handled;
-reg [26:0] pzl_wdata_i;
+//reg [26:0] pzl_wdata_i;
 wire [26:0] pzl_wdata =
-  (pzl_special_handled) ? pzl_wdata_i :
   pzl_adr_xform ?
       {xform_dat_t1h[2],xform_dat_t1h[1],xform_dat_t1h[0]}
     : wb_dat_i[26:0];
@@ -114,16 +112,17 @@ wire [26:0] pzl_wdata =
 wire [4:0] pzl_addr = {pzl_adr_type,pzl_adr_cell};
 
 wire pzl_we = puzzles_sel &
-  pzl_adr_xform ? ( wb_we_i & (wb_sel_full | pzl_special_handled) )
+  pzl_adr_xform ? ( wb_we_i & (wb_sel_full) )
     : (wb_we_i & wb_sel_full);
 
 reg [1:0] pzl_start;
 reg [1:0] pzl_abort;
 
 assign interrupt = pzl_interrupt != 0;
-wire [1:0] pzl_interrupt = {pzl_solved[1]&pzl_ie_solved[1],pzl_solved[0]&pzl_ie_solved[0]};
+// consider start to be busy to avoid possible race condition if bus is fast at enabling interrupts
+wire [1:0] pzl_interrupt = {~(pzl_busy[1]|pzl_start[1])&pzl_ie_idle[1],~(pzl_busy[0]|pzl_start[0])&pzl_ie_idle[0]};
 reg [1:0] pzl_allow_naked;
-reg [1:0] pzl_ie_solved;
+reg [1:0] pzl_ie_idle;
 
 
 always @(posedge wb_clk_i) begin
@@ -132,9 +131,9 @@ always @(posedge wb_clk_i) begin
     pzl_abort <= 0;
     pzl_allow_naked <= 2'b11;
 
-    pzl_ie_solved <= 0;
+    pzl_ie_idle <= 0;
   end else if ( wb_we_i && addr_ctrl_ie && wb_ack_o && wb_sel_i[0] ) begin
-    pzl_ie_solved <= wb_dat_i[1:0];
+    pzl_ie_idle <= wb_dat_i[1:0];
   end else if ( wb_we_i && addr_ctrl_status && wb_ack_o ) begin
     if ( wb_dat_i[0] && wb_sel_i[0] )
       pzl_start[0] <= 1;
@@ -144,7 +143,7 @@ always @(posedge wb_clk_i) begin
       pzl_start[1] <= 1;
     if ( wb_dat_i[9] && wb_sel_i[1] )
       pzl_abort[1] <= 1;
-  end else if ( wb_we_i && addr_ctrl_naked && wb_sel_i[0] && wb_ack_o ) begin
+  end else if ( wb_we_i && addr_ctrl_naked && wb_ack_o && wb_sel_i[0] ) begin
     if ( ~pzl_busy[0] )
       pzl_allow_naked[0] <= wb_dat_i[0];
     if ( ~pzl_busy[1] )
@@ -167,13 +166,13 @@ wire [1:0] pzl_stuck;
 wire [1:0] pzl_illegal;
 
 wire wb_ack_o = (
-    (puzzles_sel & (~wb_we_i|~pzl_wb_requires_special|pzl_special_handled))
+    puzzles_sel
   | addr_ctrl_status
   | addr_ctrl_naked
   | addr_ctrl_ie
 );
 
-always @(posedge wb_clk_i) begin
+/*always @(posedge wb_clk_i) begin
   if ( wb_rst_i ) begin
     pzl_wdata_i <= 0;
     pzl_special_handled <= 0;
@@ -196,13 +195,13 @@ always @(posedge wb_clk_i) begin
       end
     end
   end
-end
+end*/
 
 wire pzl_we_0 =
-    ( pzl_we & pzl_sel[0] & wb_we_i & (wb_sel_full|pzl_special_handled) );
+    ( pzl_we & pzl_sel[0] & wb_we_i & (wb_sel_full) );
 
 wire pzl_we_1 =
-    ( pzl_we & pzl_sel[1] & wb_we_i & (wb_sel_full|pzl_special_handled) );
+    ( pzl_we & pzl_sel[1] & wb_we_i & (wb_sel_full) );
 
 sudoku_puzzle puzzle0 (
   .clk(wb_clk_i), .reset(wb_rst_i),
