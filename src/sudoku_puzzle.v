@@ -219,10 +219,18 @@ always @(posedge clk) begin
           state <= STATE_ELIM_SAVE_ROW;
         end
         STATE_ELIM_SAVE_ROW : begin : blk_state_elim_save_row
-          integer c;
-          for (c = 0; c < 9; c = c + 1) begin
-            wdata_i[9*(c+1)-1 -: 9] <= valid_box[c/3];
-          end
+          wdata_i[9*(1)-1 -: 9] <= valid_box[0];
+          wdata_i[9*(2)-1 -: 9] <= valid_box[0];
+          wdata_i[9*(3)-1 -: 9] <= valid_box[0];
+
+          wdata_i[9*(4)-1 -: 9] <= valid_box[1];
+          wdata_i[9*(5)-1 -: 9] <= valid_box[1];
+          wdata_i[9*(6)-1 -: 9] <= valid_box[1];
+
+          wdata_i[9*(7)-1 -: 9] <= valid_box[2];
+          wdata_i[9*(8)-1 -: 9] <= valid_box[2];
+          wdata_i[9*(9)-1 -: 9] <= valid_box[2];
+
           // NOTE: trying to be smart here seems to make the harden process worse
           //if ( row_en_i[2] || row_en_i[5] || row_en_i[8] ) begin
           //  row_en_i <= {row_en_i[8],row_en_i[8],row_en_i[8],row_en_i[5],row_en_i[5],row_en_i[5],row_en_i[2],row_en_i[2],row_en_i[2]};
@@ -243,12 +251,17 @@ always @(posedge clk) begin
           end
         end
         STATE_ELIM_SAVE_BOX : begin : blk_state_elim_save_box
-          integer c;
           if ( row_en_i[8] ) begin
             row_en_i <= 9'b111111111;
-            for (c = 0; c < 9; c = c + 1) begin
-              wdata_i[9*(c+1)-1 -: 9] <= valid_col[c];
-            end
+            wdata_i[9*(1)-1 -: 9] <= valid_col[0];
+            wdata_i[9*(2)-1 -: 9] <= valid_col[1];
+            wdata_i[9*(3)-1 -: 9] <= valid_col[2];
+            wdata_i[9*(4)-1 -: 9] <= valid_col[3];
+            wdata_i[9*(5)-1 -: 9] <= valid_col[4];
+            wdata_i[9*(6)-1 -: 9] <= valid_col[5];
+            wdata_i[9*(7)-1 -: 9] <= valid_col[6];
+            wdata_i[9*(8)-1 -: 9] <= valid_col[7];
+            wdata_i[9*(9)-1 -: 9] <= valid_col[8];
             state <= STATE_ELIM_SAVE_COL;
           end else begin
             we_i <= 0;
