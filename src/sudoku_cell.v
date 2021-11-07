@@ -27,17 +27,17 @@ module sudoku_cell (
 
   input wire latch_singleton,
 
-  output wire is_singleton,
-  output wire is_illegal,
-  output wire solved
+  output is_singleton,
+  output is_illegal,
+  output solved
 );
 
 reg [9:1] value;
 reg [9:1] valid;
 
-assign is_singleton = (valid[9]+valid[8]+valid[7]+valid[6]+valid[5]+valid[4]+valid[3]+valid[2]+valid[1]) == 1;
-assign is_illegal   = value == 0 && (valid[9]+valid[8]+valid[7]+valid[6]+valid[5]+valid[4]+valid[3]+valid[2]+valid[1]) == 0;
-assign solved = value != 0;
+reg is_singleton;
+reg is_illegal;
+reg solved;
 
 assign rdata = ( address == 0 ? value : valid );
 
@@ -45,18 +45,27 @@ always @(posedge clk) begin
   if ( reset ) begin
     value <= 0;
     valid <= ~0;
+    is_singleton <= 0;
+    is_illegal <= 0;
+    solved <= 0;
   end else begin
     if ( we ) begin
       if ( address == 0 ) begin
-        value <= wdata;
-        valid <= (wdata == 0) ? ~0 : 0;
+        value = wdata;
+        valid = (wdata == 0) ? ~0 : 0;
       end else begin
-        valid <= (value == 0) ? valid & wdata : 0;
+        valid = (value == 0) ? valid & wdata : 0;
       end
+      is_singleton <= (valid[9]+valid[8]+valid[7]+valid[6]+valid[5]+valid[4]+valid[3]+valid[2]+valid[1]) == 1;
+      is_illegal   <= value == 0 && (valid[9]+valid[8]+valid[7]+valid[6]+valid[5]+valid[4]+valid[3]+valid[2]+valid[1]) == 0;
+      solved <= value != 0;
     end else if ( latch_singleton ) begin
       if ( is_singleton && value == 0 ) begin
         value <= valid;
         valid <= 0;
+        is_singleton <= 0;
+        is_illegal <= 0;
+        solved <= 1;
       end/* else
         valid <= (value == 0) ? ~0 : 0;*/
     end
